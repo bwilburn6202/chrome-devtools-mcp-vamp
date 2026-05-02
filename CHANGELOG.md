@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 4: raw CDP passthrough (experimental)
+
+The unblock-everything tool. Behind the new `--experimentalCdpPassthrough`
+flag (off by default), exposes 5 raw Chrome DevTools Protocol tools that
+let callers reach any CDP capability — including ones not yet wrapped by a
+bespoke MCP tool.
+
+### New tools (gated by `--experimentalCdpPassthrough`)
+
+- `cdp_send({method, params?})` — sends one CDP command to the active
+  page's session. Returns the raw JSON response.
+- `cdp_subscribe({event, bufferSize?})` — subscribe to a CDP event. Events
+  are buffered in a per-subscription ring buffer (default 1000). Returns
+  `subscriptionId`.
+- `cdp_poll({subscriptionId, maxEvents?})` — drain buffered events.
+- `cdp_unsubscribe({subscriptionId})`, `cdp_list_subscriptions`.
+
+### Safety
+
+A small allowlist of "dangerous" CDP methods (Browser.close,
+Browser.crash, Storage.clearDataForOrigin, Network.clearBrowserCache,
+Target.disposeBrowserContext, etc.) requires the additional
+`--experimentalCdpDangerous` flag, so a casual `cdp_send` cannot
+accidentally tear down the browser session.
+
 ## Unreleased — vamp fork, Phase 3: network interception & HAR
 
 Adds the on-by-default `INTERCEPTION` tool category and supporting runtime

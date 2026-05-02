@@ -190,6 +190,20 @@ export const cliOptions = {
     describe: 'Whether to enable interoperability tools',
     hidden: true,
   },
+  experimentalCdpPassthrough: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 4 (experimental): expose `cdp_send`, `cdp_subscribe`, `cdp_poll`, `cdp_unsubscribe`, `cdp_list_subscriptions` for raw Chrome DevTools Protocol access. Off by default — these tools are powerful and unfiltered.',
+  },
+  experimentalCdpDangerous: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 4 (experimental): permit a small allowlist of "dangerous" CDP methods (Browser.close, Target.disposeBrowserContext, Storage.clearDataForOrigin, etc.) via `cdp_send`. Requires --experimentalCdpPassthrough.',
+  },
   experimentalScreencast: {
     type: 'boolean',
     describe:

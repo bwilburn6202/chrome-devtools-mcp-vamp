@@ -42,6 +42,84 @@ export const commands: Commands = {
       },
     },
   },
+  cdp_list_subscriptions: {
+    description:
+      'List active CDP event subscriptions. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  cdp_poll: {
+    description:
+      'Drain buffered events for a CDP subscription created via `cdp_subscribe`. Returns the events accumulated since the last poll and clears the buffer. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      subscriptionId: {
+        name: 'subscriptionId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      maxEvents: {
+        name: 'maxEvents',
+        type: 'integer',
+        description:
+          'Cap on events returned this poll. Default: drain everything.',
+        required: false,
+      },
+    },
+  },
+  cdp_send: {
+    description:
+      'Send a raw Chrome DevTools Protocol command to the active page\'s CDP session.\n\nReturns the raw JSON response. Use this when no bespoke MCP tool exists for the capability you need (e.g. "Page.printToPDF", "Debugger.setBreakpointByUrl", "Animation.getPlaybackRate"). Reference: https://chromedevtools.github.io/devtools-protocol/ (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      method: {
+        name: 'method',
+        type: 'string',
+        description:
+          'CDP method, e.g. "Runtime.evaluate", "Page.captureScreenshot".',
+        required: true,
+      },
+      params: {
+        name: 'params',
+        type: 'object',
+        description: 'CDP parameters object. Default {}.',
+        required: false,
+      },
+    },
+  },
+  cdp_subscribe: {
+    description:
+      'Subscribe to a raw CDP event for the active page. Returns a `subscriptionId`.\n\nEvents are buffered (ring buffer, default 1000 entries). Poll with `cdp_poll` to drain. The subscription persists until `cdp_unsubscribe` is called or the page closes. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      event: {
+        name: 'event',
+        type: 'string',
+        description: 'CDP event name, e.g. "Network.requestWillBeSent".',
+        required: true,
+      },
+      bufferSize: {
+        name: 'bufferSize',
+        type: 'integer',
+        description: 'Ring buffer capacity. Default 1000.',
+        required: false,
+      },
+    },
+  },
+  cdp_unsubscribe: {
+    description:
+      'Remove a CDP event subscription created via `cdp_subscribe`. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      subscriptionId: {
+        name: 'subscriptionId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
   clear_all_storage: {
     description:
       'Clears one or more storage types for an origin via CDP `Storage.clearDataForOrigin`. Default: all storage types for the active page origin.',
