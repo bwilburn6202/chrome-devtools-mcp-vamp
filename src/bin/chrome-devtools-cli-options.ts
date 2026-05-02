@@ -23,6 +23,25 @@ export type Commands = Record<
   }
 >;
 export const commands: Commands = {
+  block_urls: {
+    description:
+      'Block requests matching any of the provided URLPattern strings. Convenience wrapper around `intercept_network` with `action: abort`.',
+    category: 'Network interception',
+    args: {
+      patterns: {
+        name: 'patterns',
+        type: 'array',
+        description: '',
+        required: true,
+      },
+      abortReason: {
+        name: 'abortReason',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   clear_all_storage: {
     description:
       'Clears one or more storage types for an origin via CDP `Storage.clearDataForOrigin`. Default: all storage types for the active page origin.',
@@ -80,6 +99,11 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  clear_interceptors: {
+    description: 'Removes all interceptors for the current page.',
+    category: 'Network interception',
+    args: {},
   },
   clear_local_storage: {
     description:
@@ -661,6 +685,91 @@ export const commands: Commands = {
       },
     },
   },
+  intercept_network: {
+    description:
+      'Register a persistent request interceptor for the current page.\n\nReturns the new `interceptorId`. Rules are evaluated in registration order; the first matching rule wins. Use `mock_response`, `block_urls`, or `modify_request_headers` for common cases — they are convenience wrappers around this tool.',
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description:
+          'URLPattern to match (e.g. `https://api.example.com/*` or `*://*/static/*`).',
+        required: true,
+      },
+      action: {
+        name: 'action',
+        type: 'string',
+        description:
+          '`continue` (no-op pass through), `abort` (block), `fulfill` (mock response), or `modify` (header / method / body overrides on the outgoing request).',
+        required: true,
+        enum: ['continue', 'abort', 'fulfill', 'modify'],
+      },
+      abortReason: {
+        name: 'abortReason',
+        type: 'string',
+        description: 'For `abort`. Default `blockedbyclient`.',
+        required: false,
+      },
+      status: {
+        name: 'status',
+        type: 'integer',
+        description: 'For `fulfill`. Default 200.',
+        required: false,
+      },
+      headers: {
+        name: 'headers',
+        type: 'object',
+        description: 'For `fulfill`. Response headers.',
+        required: false,
+      },
+      body: {
+        name: 'body',
+        type: 'string',
+        description: 'For `fulfill`. Response body.',
+        required: false,
+      },
+      contentType: {
+        name: 'contentType',
+        type: 'string',
+        description:
+          'For `fulfill`. Convenience for the `Content-Type` header.',
+        required: false,
+      },
+      latencyMs: {
+        name: 'latencyMs',
+        type: 'integer',
+        description: 'Artificial delay before the response is delivered.',
+        required: false,
+      },
+      setHeaders: {
+        name: 'setHeaders',
+        type: 'object',
+        description:
+          'For `modify`. Headers to set/override on the outgoing request.',
+        required: false,
+      },
+      removeHeaders: {
+        name: 'removeHeaders',
+        type: 'array',
+        description:
+          'For `modify`. Header names to drop from the outgoing request.',
+        required: false,
+      },
+      method: {
+        name: 'method',
+        type: 'string',
+        description: 'For `modify`. Override HTTP method.',
+        required: false,
+      },
+      postData: {
+        name: 'postData',
+        type: 'string',
+        description: 'For `modify`. Override outgoing request body.',
+        required: false,
+      },
+    },
+  },
   lighthouse_audit: {
     description:
       'Get Lighthouse score and reports for accessibility, SEO and best practices. This excludes performance. For performance audits, run performance_start_trace',
@@ -759,6 +868,11 @@ export const commands: Commands = {
     category: 'Extensions',
     args: {},
   },
+  list_har_recordings: {
+    description: 'Lists in-progress HAR recordings.',
+    category: 'Network interception',
+    args: {},
+  },
   list_indexeddb_databases: {
     description: "Lists IndexedDB database names for the active page's origin.",
     category: 'Storage',
@@ -770,6 +884,11 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  list_interceptors: {
+    description: 'Lists all active network interceptors for the current page.',
+    category: 'Network interception',
+    args: {},
   },
   list_network_requests: {
     description:
@@ -828,6 +947,74 @@ export const commands: Commands = {
         type: 'string',
         description: 'A path to a .heapsnapshot file to read.',
         required: true,
+      },
+    },
+  },
+  mock_response: {
+    description:
+      'Convenience wrapper around `intercept_network` with `action: fulfill`. Returns the registered interceptorId.',
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      status: {
+        name: 'status',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      headers: {
+        name: 'headers',
+        type: 'object',
+        description: '',
+        required: false,
+      },
+      body: {
+        name: 'body',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      contentType: {
+        name: 'contentType',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      latencyMs: {
+        name: 'latencyMs',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  modify_request_headers: {
+    description:
+      'Convenience wrapper around `intercept_network` with `action: modify`. Sets and/or removes headers on outgoing requests matching urlPattern.',
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      setHeaders: {
+        name: 'setHeaders',
+        type: 'object',
+        description: '',
+        required: false,
+      },
+      removeHeaders: {
+        name: 'removeHeaders',
+        type: 'array',
+        description: '',
+        required: false,
       },
     },
   },
@@ -1000,6 +1187,47 @@ export const commands: Commands = {
       },
     },
   },
+  record_har_start: {
+    description:
+      'Begin recording a HAR for the current page. Use `record_har_stop` (with the same `name`) to end the recording and get the HAR contents or write a file.',
+    category: 'Network interception',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description:
+          'Logical name for this recording. Pass the same name to `record_har_stop`.',
+        required: true,
+      },
+      includeBodies: {
+        name: 'includeBodies',
+        type: 'boolean',
+        description:
+          'When true, response bodies up to 1 MiB are included in the HAR (utf-8 if textual, base64 otherwise).',
+        required: false,
+      },
+    },
+  },
+  record_har_stop: {
+    description:
+      'Stops a HAR recording started with `record_har_start`. Either writes to `filePath` (with `.har` extension auto-applied) or returns the HAR JSON inline.',
+    category: 'Network interception',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description:
+          'Optional output path. If omitted, the HAR is returned inline.',
+        required: false,
+      },
+    },
+  },
   reload_extension: {
     description:
       'Reloads an unpacked Chrome extension by its ID. (requires flag: --categoryExtensions=true)',
@@ -1009,6 +1237,18 @@ export const commands: Commands = {
         name: 'id',
         type: 'string',
         description: 'ID of the extension to reload.',
+        required: true,
+      },
+    },
+  },
+  remove_interceptor: {
+    description: 'Removes a single interceptor by id.',
+    category: 'Network interception',
+    args: {
+      interceptorId: {
+        name: 'interceptorId',
+        type: 'string',
+        description: '',
         required: true,
       },
     },

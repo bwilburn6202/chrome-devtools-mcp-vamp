@@ -11,9 +11,11 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 import type {TargetUniverse} from './DevtoolsUtils.js';
 import {UniverseManager} from './DevtoolsUtils.js';
+import type {HarRecorder} from './HarRecorder.js';
 import {HeapSnapshotManager} from './HeapSnapshotManager.js';
 import type {AggregatedInfoWithUid} from './HeapSnapshotManager.js';
 import {McpPage} from './McpPage.js';
+import {NetworkInterceptionManager} from './NetworkInterceptionManager.js';
 import {
   NetworkCollector,
   ConsoleCollector,
@@ -125,6 +127,9 @@ export class McpContext implements Context {
   #locatorClass: typeof Locator;
   #options: McpContextOptions;
   #heapSnapshotManager: HeapSnapshotManager;
+  // Phase 3: persistent interception registry + named HAR recordings.
+  #interceptors = new NetworkInterceptionManager();
+  #harRecorders = new Map<string, HarRecorder>();
   #roots: Root[] | undefined = undefined;
 
   private constructor(
@@ -446,6 +451,28 @@ export class McpContext implements Context {
   /** Phase 1.6: per-tool tunables (defaults merged with user overrides). */
   getTuning(): RuntimeTuning {
     return {...DEFAULT_TUNING, ...(this.#options.tuning ?? {})};
+  }
+
+  /** Phase 3: shared network interception registry. */
+  getInterceptionManager(): NetworkInterceptionManager {
+    return this.#interceptors;
+  }
+
+  /** Phase 3: HAR recording state. */
+  getHarRecorder(name: string): HarRecorder | undefined {
+    return this.#harRecorders.get(name);
+  }
+
+  setHarRecorder(name: string, recorder: HarRecorder): void {
+    this.#harRecorders.set(name, recorder);
+  }
+
+  deleteHarRecorder(name: string): void {
+    this.#harRecorders.delete(name);
+  }
+
+  listHarRecorders(): HarRecorder[] {
+    return [...this.#harRecorders.values()];
   }
 
   getSelectedPptrPage(): Page {

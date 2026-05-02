@@ -23,6 +23,8 @@ describe('cli args parsing', () => {
     categoryExperimentalInPage: false,
     'category-storage': true,
     categoryStorage: true,
+    'category-interception': true,
+    categoryInterception: true,
     'auto-connect': undefined,
     autoConnect: undefined,
     'performance-crux': true,

@@ -539,6 +539,17 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
   - [`set_cookie`](docs/tool-reference.md#set_cookie)
   - [`set_local_storage`](docs/tool-reference.md#set_local_storage)
   - [`set_session_storage`](docs/tool-reference.md#set_session_storage)
+- **Network interception** (10 tools)
+  - [`block_urls`](docs/tool-reference.md#block_urls)
+  - [`clear_interceptors`](docs/tool-reference.md#clear_interceptors)
+  - [`intercept_network`](docs/tool-reference.md#intercept_network)
+  - [`list_har_recordings`](docs/tool-reference.md#list_har_recordings)
+  - [`list_interceptors`](docs/tool-reference.md#list_interceptors)
+  - [`mock_response`](docs/tool-reference.md#mock_response)
+  - [`modify_request_headers`](docs/tool-reference.md#modify_request_headers)
+  - [`record_har_start`](docs/tool-reference.md#record_har_start)
+  - [`record_har_stop`](docs/tool-reference.md#record_har_stop)
+  - [`remove_interceptor`](docs/tool-reference.md#remove_interceptor)
 
 <!-- END AUTO GENERATED TOOLS -->
 
@@ -649,6 +660,11 @@ The Chrome DevTools MCP server supports the following configuration option:
 
 - **`--categoryStorage`/ `--category-storage`**
   Set to false to disable storage tools (cookies, localStorage, sessionStorage, IndexedDB, CacheStorage). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryInterception`/ `--category-interception`**
+  Set to false to disable network interception tools (intercept*network, mock_response, modify_request_headers, block_urls, record_har*\*). Default true.
   - **Type:** boolean
   - **Default:** `true`
 

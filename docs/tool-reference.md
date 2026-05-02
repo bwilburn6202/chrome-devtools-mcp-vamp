@@ -1,6 +1,6 @@
 <!-- AUTO GENERATED DO NOT EDIT - run 'npm run gen' to update-->
 
-# Chrome DevTools MCP Tool Reference (~10350 cl100k_base tokens)
+# Chrome DevTools MCP Tool Reference (~12495 cl100k_base tokens)
 
 - **[Input automation](#input-automation)** (9 tools)
   - [`click`](#click)
@@ -64,6 +64,17 @@
   - [`set_cookie`](#set_cookie)
   - [`set_local_storage`](#set_local_storage)
   - [`set_session_storage`](#set_session_storage)
+- **[Network interception](#network-interception)** (10 tools)
+  - [`block_urls`](#block_urls)
+  - [`clear_interceptors`](#clear_interceptors)
+  - [`intercept_network`](#intercept_network)
+  - [`list_har_recordings`](#list_har_recordings)
+  - [`list_interceptors`](#list_interceptors)
+  - [`mock_response`](#mock_response)
+  - [`modify_request_headers`](#modify_request_headers)
+  - [`record_har_start`](#record_har_start)
+  - [`record_har_stop`](#record_har_stop)
+  - [`remove_interceptor`](#remove_interceptor)
 
 ## Input automation
 
@@ -696,5 +707,124 @@ in the DevTools Elements panel (if any).
 
 - **key** (string) **(required)**
 - **value** (string) **(required)**
+
+---
+
+## Network interception
+
+### `block_urls`
+
+**Description:** Block requests matching any of the provided URLPattern strings. Convenience wrapper around `[`intercept_network`](#intercept_network)` with `action: abort`.
+
+**Parameters:**
+
+- **patterns** (array) **(required)**
+- **abortReason** (string) _(optional)_
+
+---
+
+### `clear_interceptors`
+
+**Description:** Removes all interceptors for the current page.
+
+**Parameters:** None
+
+---
+
+### `intercept_network`
+
+**Description:** Register a persistent request interceptor for the current page.
+
+Returns the new `interceptorId`. Rules are evaluated in registration order; the first matching rule wins. Use `[`mock_response`](#mock_response)`, `[`block_urls`](#block_urls)`, or `[`modify_request_headers`](#modify_request_headers)` for common cases — they are convenience wrappers around this tool.
+
+**Parameters:**
+
+- **action** (enum: "continue", "abort", "fulfill", "modify") **(required)**: `continue` (no-op pass through), `abort` (block), `fulfill` (mock response), or `modify` (header / method / body overrides on the outgoing request).
+- **urlPattern** (string) **(required)**: URLPattern to match (e.g. `https://api.example.com/*` or `*://*/static/*`).
+- **abortReason** (string) _(optional)_: For `abort`. Default `blockedbyclient`.
+- **body** (string) _(optional)_: For `fulfill`. Response body.
+- **contentType** (string) _(optional)_: For `fulfill`. Convenience for the `Content-Type` header.
+- **headers** (unknown) _(optional)_: For `fulfill`. Response headers.
+- **latencyMs** (integer) _(optional)_: Artificial delay before the response is delivered.
+- **method** (string) _(optional)_: For `modify`. Override HTTP method.
+- **postData** (string) _(optional)_: For `modify`. Override outgoing request body.
+- **removeHeaders** (array) _(optional)_: For `modify`. Header names to drop from the outgoing request.
+- **setHeaders** (unknown) _(optional)_: For `modify`. Headers to set/override on the outgoing request.
+- **status** (integer) _(optional)_: For `fulfill`. Default 200.
+
+---
+
+### `list_har_recordings`
+
+**Description:** Lists in-progress HAR recordings.
+
+**Parameters:** None
+
+---
+
+### `list_interceptors`
+
+**Description:** Lists all active network interceptors for the current page.
+
+**Parameters:** None
+
+---
+
+### `mock_response`
+
+**Description:** Convenience wrapper around `[`intercept_network`](#intercept_network)` with `action: fulfill`. Returns the registered interceptorId.
+
+**Parameters:**
+
+- **urlPattern** (string) **(required)**
+- **body** (string) _(optional)_
+- **contentType** (string) _(optional)_
+- **headers** (unknown) _(optional)_
+- **latencyMs** (integer) _(optional)_
+- **status** (integer) _(optional)_
+
+---
+
+### `modify_request_headers`
+
+**Description:** Convenience wrapper around `[`intercept_network`](#intercept_network)` with `action: modify`. Sets and/or removes headers on outgoing requests matching urlPattern.
+
+**Parameters:**
+
+- **urlPattern** (string) **(required)**
+- **removeHeaders** (array) _(optional)_
+- **setHeaders** (unknown) _(optional)_
+
+---
+
+### `record_har_start`
+
+**Description:** Begin recording a HAR for the current page. Use `[`record_har_stop`](#record_har_stop)` (with the same `name`) to end the recording and get the HAR contents or write a file.
+
+**Parameters:**
+
+- **name** (string) **(required)**: Logical name for this recording. Pass the same name to `[`record_har_stop`](#record_har_stop)`.
+- **includeBodies** (boolean) _(optional)_: When true, response bodies up to 1 MiB are included in the HAR (utf-8 if textual, base64 otherwise).
+
+---
+
+### `record_har_stop`
+
+**Description:** Stops a HAR recording started with `[`record_har_start`](#record_har_start)`. Either writes to `filePath` (with `.har` extension auto-applied) or returns the HAR JSON inline.
+
+**Parameters:**
+
+- **name** (string) **(required)**
+- **filePath** (string) _(optional)_: Optional output path. If omitted, the HAR is returned inline.
+
+---
+
+### `remove_interceptor`
+
+**Description:** Removes a single interceptor by id.
+
+**Parameters:**
+
+- **interceptorId** (string) **(required)**
 
 ---

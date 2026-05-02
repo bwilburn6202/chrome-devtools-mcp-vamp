@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 3: network interception & HAR
+
+Adds the on-by-default `INTERCEPTION` tool category and supporting runtime
+infrastructure (`NetworkInterceptionManager`, `HarRecorder`).
+
+### New tools
+
+- `intercept_network({urlPattern, action, ...})` — register a persistent
+  interceptor with action `continue` / `abort` / `fulfill` / `modify`.
+- `list_interceptors`, `remove_interceptor`, `clear_interceptors`.
+- `mock_response({urlPattern, status?, headers?, body?, contentType?,
+  latencyMs?})` — convenience wrapper around `intercept_network` with
+  `action: fulfill`.
+- `modify_request_headers({urlPattern, setHeaders?, removeHeaders?})` —
+  convenience wrapper for header injection / stripping.
+- `block_urls({patterns, abortReason?})` — bulk block by URLPattern list.
+- `record_har_start({name, includeBodies?})`,
+  `record_har_stop({name, filePath?})`, `list_har_recordings`.
+
+### New CLI flag
+
+`--categoryInterception` (default true). Disable with
+`--no-categoryInterception`.
+
+### Architecture
+
+- `NetworkInterceptionManager` lives on `McpContext`. One Puppeteer
+  `request` listener per page; lazy install on first rule, removed on
+  the last. Rules walked in registration order; first match wins.
+- `HarRecorder` subscribes to `request` / `response` /
+  `requestfinished` / `requestfailed` and emits HAR 1.2. Optional body
+  capture (textual ≤ 1 MiB inline as utf-8, binary as base64).
+
 ## Unreleased — vamp fork, Phase 2: storage tools
 
 Adds the on-by-default `STORAGE` tool category, covering capabilities that

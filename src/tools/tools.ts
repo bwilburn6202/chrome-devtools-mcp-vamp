@@ -14,6 +14,7 @@ import * as inputTools from './input.js';
 import * as lighthouseTools from './lighthouse.js';
 import * as memoryTools from './memory.js';
 import * as networkTools from './network.js';
+import * as networkInterceptTools from './networkIntercept.js';
 import * as pagesTools from './pages.js';
 import * as performanceTools from './performance.js';
 import * as screencastTools from './screencast.js';
@@ -37,6 +38,7 @@ export const createTools = (args: ParsedArguments) => {
         ...Object.values(lighthouseTools),
         ...Object.values(memoryTools),
         ...Object.values(networkTools),
+        ...Object.values(networkInterceptTools),
         ...Object.values(pagesTools),
         ...Object.values(performanceTools),
         ...Object.values(screencastTools),

@@ -173,6 +173,47 @@ export type SupportedExtensions =
   | '.csv'
   | '.json.gz';
 
+/** Phase 3: structural shape of the network interception registry exposed to tools. */
+export interface InterceptionManagerLike {
+  listForPage(pageId: number): InterceptorRuleLike[];
+  listAll(): InterceptorRuleLike[];
+  addRule(
+    page: Page,
+    pageId: number,
+    rule: Omit<InterceptorRuleLike, 'id' | 'pageId' | 'createdAt'>,
+  ): Promise<InterceptorRuleLike>;
+  removeRule(page: Page, pageId: number, ruleId: string): Promise<boolean>;
+  clearForPage(page: Page, pageId: number): Promise<number>;
+}
+
+export interface InterceptorRuleLike {
+  id: string;
+  pageId: number;
+  urlPattern: string;
+  action: 'continue' | 'abort' | 'fulfill' | 'modify';
+  abortReason?: string;
+  status?: number;
+  headers?: Record<string, string>;
+  body?: string;
+  contentType?: string;
+  latencyMs?: number;
+  setHeaders?: Record<string, string>;
+  removeHeaders?: string[];
+  method?: string;
+  postData?: string;
+  createdAt: number;
+}
+
+/** Phase 3: structural shape of the HAR recorder exposed to tools. */
+export interface HarRecorderLike {
+  readonly name: string;
+  readonly pageId: number;
+  readonly startedAt: number;
+  readonly includeBodies: boolean;
+  stop(): unknown;
+  toHarJson(): string;
+}
+
 /** Phase 1.6: per-tool tunables (drag delays, lighthouse timeouts, etc.). */
 export interface ToolTuning {
   dragDelayMs: number;
@@ -197,6 +238,13 @@ export type Context = Readonly<{
   isCruxEnabled(): boolean;
   /** Phase 1.6: tunables for hardcoded constants (defaults merged with user CLI flags). */
   getTuning(): ToolTuning;
+  /** Phase 3: persistent network interception registry. */
+  getInterceptionManager(): InterceptionManagerLike;
+  /** Phase 3: HAR recording state (keyed by user-provided name). */
+  getHarRecorder(name: string): HarRecorderLike | undefined;
+  setHarRecorder(name: string, recorder: HarRecorderLike): void;
+  deleteHarRecorder(name: string): void;
+  listHarRecorders(): HarRecorderLike[];
   recordedTraces(): TraceResult[];
   storeTraceRecording(result: TraceResult): void;
   getPageById(pageId: number): ContextPage;

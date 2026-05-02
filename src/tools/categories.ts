@@ -16,6 +16,8 @@ export enum ToolCategory {
   MEMORY = 'memory',
   // Phase 2: cookies, localStorage, sessionStorage, IndexedDB, CacheStorage.
   STORAGE = 'storage',
+  // Phase 3: persistent request interception, mocking, header injection, HAR.
+  INTERCEPTION = 'interception',
 }
 
 export const labels = {
@@ -29,6 +31,7 @@ export const labels = {
   [ToolCategory.IN_PAGE]: 'In-page tools',
   [ToolCategory.MEMORY]: 'Memory',
   [ToolCategory.STORAGE]: 'Storage',
+  [ToolCategory.INTERCEPTION]: 'Network interception',
 };
 
 export const OFF_BY_DEFAULT_CATEGORIES = [

@@ -250,6 +250,12 @@ export const cliOptions = {
     describe:
       'Set to false to disable storage tools (cookies, localStorage, sessionStorage, IndexedDB, CacheStorage). Default true.',
   },
+  categoryInterception: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable network interception tools (intercept_network, mock_response, modify_request_headers, block_urls, record_har_*). Default true.',
+  },
   performanceCrux: {
     type: 'boolean',
     default: true,
