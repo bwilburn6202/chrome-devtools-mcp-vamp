@@ -270,6 +270,12 @@ export const cliOptions = {
     describe:
       'Set to false to disable network interception tools (intercept_network, mock_response, modify_request_headers, block_urls, record_har_*). Default true.',
   },
+  categoryServiceWorker: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable service worker / PWA tools (list_service_workers, evaluate_in_worker, unregister_service_worker, update_service_worker, skip_waiting, get_manifest, trigger_background_sync). Default true.',
+  },
   performanceCrux: {
     type: 'boolean',
     default: true,

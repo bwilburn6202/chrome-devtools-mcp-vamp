@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 5: service worker / PWA tools
+
+Adds the on-by-default `SERVICE_WORKER` tool category with 9 tools that
+generalize the previous extension-only worker support to any page-attached
+worker, plus inspection/control surfaces for SW registrations and the
+web-app manifest.
+
+### New tools
+
+- `list_service_workers` — page-attached worker URLs.
+- `evaluate_in_worker({workerUrlSubstring, expression})` — run JS in any
+  page-attached worker; expression form so callers don't need to write
+  function literals.
+- `unregister_service_worker({scopeURL})`,
+  `update_service_worker({scopeURL})`, `skip_waiting({scopeURL})`,
+  `start_service_worker({scopeURL})`,
+  `stop_service_worker({versionId})`.
+- `get_manifest` — CDP `Page.getAppManifest`.
+- `trigger_background_sync({origin, serviceWorkerRegistrationId, tag})`.
+
+### New CLI flag
+
+`--categoryServiceWorker` (default true). Disable with
+`--no-categoryServiceWorker`.
+
+### Note
+
+Cross-target service workers (the common case for production sites) are
+not enumerable through Puppeteer's `Page.workers()` alone. For full
+cross-target enumeration, combine these tools with the Phase 4
+`cdp_subscribe('ServiceWorker.workerVersionUpdated')` after
+`cdp_send('ServiceWorker.enable')`.
+
 ## Unreleased — vamp fork, Phase 4: raw CDP passthrough (experimental)
 
 The unblock-everything tool. Behind the new `--experimentalCdpPassthrough`

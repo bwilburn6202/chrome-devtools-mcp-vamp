@@ -1,6 +1,6 @@
 <!-- AUTO GENERATED DO NOT EDIT - run 'npm run gen' to update-->
 
-# Chrome DevTools MCP Tool Reference (~12495 cl100k_base tokens)
+# Chrome DevTools MCP Tool Reference (~13997 cl100k_base tokens)
 
 - **[Input automation](#input-automation)** (9 tools)
   - [`click`](#click)
@@ -75,6 +75,16 @@
   - [`record_har_start`](#record_har_start)
   - [`record_har_stop`](#record_har_stop)
   - [`remove_interceptor`](#remove_interceptor)
+- **[Service workers / PWA](#service-workers-/-pwa)** (9 tools)
+  - [`evaluate_in_worker`](#evaluate_in_worker)
+  - [`get_manifest`](#get_manifest)
+  - [`list_service_workers`](#list_service_workers)
+  - [`skip_waiting`](#skip_waiting)
+  - [`start_service_worker`](#start_service_worker)
+  - [`stop_service_worker`](#stop_service_worker)
+  - [`trigger_background_sync`](#trigger_background_sync)
+  - [`unregister_service_worker`](#unregister_service_worker)
+  - [`update_service_worker`](#update_service_worker)
 
 ## Input automation
 
@@ -826,5 +836,98 @@ Returns the new `interceptorId`. Rules are evaluated in registration order; the 
 **Parameters:**
 
 - **interceptorId** (string) **(required)**
+
+---
+
+## Service workers / PWA
+
+### `evaluate_in_worker`
+
+**Description:** Evaluates a JavaScript expression inside a service worker. The worker is identified by a substring of its URL (e.g. "sw.js" or "/service-worker.js").
+
+The script is run as an expression. Use `[`evaluate_script`](#evaluate_script)` for page contexts; this tool exists for SW debugging (`caches.keys()`, `self.registration.update()`, etc.).
+
+**Parameters:**
+
+- **expression** (string) **(required)**: JavaScript expression to evaluate in the worker. Async expressions resolved.
+- **workerUrlSubstring** (string) **(required)**: Substring matched against worker URLs. The first matching worker is used.
+
+---
+
+### `get_manifest`
+
+**Description:** Returns the active page's web app manifest (CDP `Page.getAppManifest`). Includes the manifest URL, parsed errors, and raw text.
+
+**Parameters:** None
+
+---
+
+### `list_service_workers`
+
+**Description:** Lists active service workers visible to the current page's browser context (URLs and target IDs). Includes any web workers attached via `Page.workers()` for completeness.
+
+**Parameters:** None
+
+---
+
+### `skip_waiting`
+
+**Description:** Tells a waiting service worker version to immediately activate (CDP `ServiceWorker.skipWaiting`). Useful for testing the new SW without forcing a hard reload.
+
+**Parameters:**
+
+- **scopeURL** (string) **(required)**
+
+---
+
+### `start_service_worker`
+
+**Description:** Starts a service worker registration (CDP `ServiceWorker.startWorker`).
+
+**Parameters:**
+
+- **scopeURL** (string) **(required)**
+
+---
+
+### `stop_service_worker`
+
+**Description:** Stops the active service worker for a registration (CDP `ServiceWorker.stopWorker`). Doesn't unregister; the SW will start again on the next event.
+
+**Parameters:**
+
+- **versionId** (string) **(required)**: Service worker version id (from `list_service_worker_registrations`).
+
+---
+
+### `trigger_background_sync`
+
+**Description:** Manually trigger a Background Sync event for a registered tag (CDP `BackgroundService` domain).
+
+**Parameters:**
+
+- **origin** (string) **(required)**: Origin of the service worker.
+- **serviceWorkerRegistrationId** (string) **(required)**: Registration id (from `[`list_service_workers`](#list_service_workers)`'s context output).
+- **tag** (string) **(required)**: Sync tag.
+
+---
+
+### `unregister_service_worker`
+
+**Description:** Unregisters a service worker by registration scope URL (e.g. "https://example.com/").
+
+**Parameters:**
+
+- **scopeURL** (string) **(required)**: Service worker registration scope URL.
+
+---
+
+### `update_service_worker`
+
+**Description:** Forces a service worker registration update (re-fetches the SW script and runs the install/activate cycle if changed).
+
+**Parameters:**
+
+- **scopeURL** (string) **(required)**
 
 ---

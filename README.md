@@ -550,6 +550,16 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
   - [`record_har_start`](docs/tool-reference.md#record_har_start)
   - [`record_har_stop`](docs/tool-reference.md#record_har_stop)
   - [`remove_interceptor`](docs/tool-reference.md#remove_interceptor)
+- **Service workers / PWA** (9 tools)
+  - [`evaluate_in_worker`](docs/tool-reference.md#evaluate_in_worker)
+  - [`get_manifest`](docs/tool-reference.md#get_manifest)
+  - [`list_service_workers`](docs/tool-reference.md#list_service_workers)
+  - [`skip_waiting`](docs/tool-reference.md#skip_waiting)
+  - [`start_service_worker`](docs/tool-reference.md#start_service_worker)
+  - [`stop_service_worker`](docs/tool-reference.md#stop_service_worker)
+  - [`trigger_background_sync`](docs/tool-reference.md#trigger_background_sync)
+  - [`unregister_service_worker`](docs/tool-reference.md#unregister_service_worker)
+  - [`update_service_worker`](docs/tool-reference.md#update_service_worker)
 
 <!-- END AUTO GENERATED TOOLS -->
 
@@ -665,6 +675,11 @@ The Chrome DevTools MCP server supports the following configuration option:
 
 - **`--categoryInterception`/ `--category-interception`**
   Set to false to disable network interception tools (intercept*network, mock_response, modify_request_headers, block_urls, record_har*\*). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryServiceWorker`/ `--category-service-worker`**
+  Set to false to disable service worker / PWA tools (list_service_workers, evaluate_in_worker, unregister_service_worker, update_service_worker, skip_waiting, get_manifest, trigger_background_sync). Default true.
   - **Type:** boolean
   - **Default:** `true`
 

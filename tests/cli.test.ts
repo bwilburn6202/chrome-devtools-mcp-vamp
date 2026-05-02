@@ -25,6 +25,8 @@ describe('cli args parsing', () => {
     categoryStorage: true,
     'category-interception': true,
     categoryInterception: true,
+    'category-service-worker': true,
+    categoryServiceWorker: true,
     'experimental-cdp-passthrough': false,
     experimentalCdpPassthrough: false,
     'experimental-cdp-dangerous': false,

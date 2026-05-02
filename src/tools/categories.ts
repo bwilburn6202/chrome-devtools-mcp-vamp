@@ -18,6 +18,8 @@ export enum ToolCategory {
   STORAGE = 'storage',
   // Phase 3: persistent request interception, mocking, header injection, HAR.
   INTERCEPTION = 'interception',
+  // Phase 5: service workers and PWA-related capabilities.
+  SERVICE_WORKER = 'serviceWorker',
 }
 
 export const labels = {
@@ -32,6 +34,7 @@ export const labels = {
   [ToolCategory.MEMORY]: 'Memory',
   [ToolCategory.STORAGE]: 'Storage',
   [ToolCategory.INTERCEPTION]: 'Network interception',
+  [ToolCategory.SERVICE_WORKER]: 'Service workers / PWA',
 };
 
 export const OFF_BY_DEFAULT_CATEGORIES = [

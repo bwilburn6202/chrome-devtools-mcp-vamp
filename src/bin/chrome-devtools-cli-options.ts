@@ -435,6 +435,27 @@ export const commands: Commands = {
       },
     },
   },
+  evaluate_in_worker: {
+    description:
+      'Evaluates a JavaScript expression inside a service worker. The worker is identified by a substring of its URL (e.g. "sw.js" or "/service-worker.js").\n\nThe script is run as an expression. Use `evaluate_script` for page contexts; this tool exists for SW debugging (`caches.keys()`, `self.registration.update()`, etc.).',
+    category: 'Service workers / PWA',
+    args: {
+      workerUrlSubstring: {
+        name: 'workerUrlSubstring',
+        type: 'string',
+        description:
+          'Substring matched against worker URLs. The first matching worker is used.',
+        required: true,
+      },
+      expression: {
+        name: 'expression',
+        type: 'string',
+        description:
+          'JavaScript expression to evaluate in the worker. Async expressions resolved.',
+        required: true,
+      },
+    },
+  },
   evaluate_script: {
     description:
       'Evaluate a JavaScript function inside the currently selected page. Returns the response as JSON,\nso returned values have to be JSON-serializable.',
@@ -611,6 +632,12 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  get_manifest: {
+    description:
+      "Returns the active page's web app manifest (CDP `Page.getAppManifest`). Includes the manifest URL, parsed errors, and raw text.",
+    category: 'Service workers / PWA',
+    args: {},
   },
   get_memory_snapshot_details: {
     description:
@@ -1007,6 +1034,12 @@ export const commands: Commands = {
   list_pages: {
     description: 'Get a list of pages open in the browser.',
     category: 'Navigation automation',
+    args: {},
+  },
+  list_service_workers: {
+    description:
+      "Lists active service workers visible to the current page's browser context (URLs and target IDs). Includes any web workers attached via `Page.workers()` for completeness.",
+    category: 'Service workers / PWA',
     args: {},
   },
   list_webmcp_tools: {
@@ -1489,6 +1522,46 @@ export const commands: Commands = {
       },
     },
   },
+  skip_waiting: {
+    description:
+      'Tells a waiting service worker version to immediately activate (CDP `ServiceWorker.skipWaiting`). Useful for testing the new SW without forcing a hard reload.',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  start_service_worker: {
+    description:
+      'Starts a service worker registration (CDP `ServiceWorker.startWorker`).',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  stop_service_worker: {
+    description:
+      "Stops the active service worker for a registration (CDP `ServiceWorker.stopWorker`). Doesn't unregister; the SW will start again on the next event.",
+    category: 'Service workers / PWA',
+    args: {
+      versionId: {
+        name: 'versionId',
+        type: 'string',
+        description:
+          'Service worker version id (from `list_service_worker_registrations`).',
+        required: true,
+      },
+    },
+  },
   take_memory_snapshot: {
     description:
       'Capture a heap snapshot of the currently selected page. Use to analyze the memory distribution of JavaScript objects and debug memory leaks.',
@@ -1574,6 +1647,32 @@ export const commands: Commands = {
       },
     },
   },
+  trigger_background_sync: {
+    description:
+      'Manually trigger a Background Sync event for a registered tag (CDP `BackgroundService` domain).',
+    category: 'Service workers / PWA',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: 'Origin of the service worker.',
+        required: true,
+      },
+      serviceWorkerRegistrationId: {
+        name: 'serviceWorkerRegistrationId',
+        type: 'string',
+        description:
+          "Registration id (from `list_service_workers`'s context output).",
+        required: true,
+      },
+      tag: {
+        name: 'tag',
+        type: 'string',
+        description: 'Sync tag.',
+        required: true,
+      },
+    },
+  },
   trigger_extension_action: {
     description:
       'Triggers the default action of an extension by its ID. (requires flag: --categoryExtensions=true)',
@@ -1615,6 +1714,32 @@ export const commands: Commands = {
         name: 'id',
         type: 'string',
         description: 'ID of the extension to uninstall.',
+        required: true,
+      },
+    },
+  },
+  unregister_service_worker: {
+    description:
+      'Unregisters a service worker by registration scope URL (e.g. "https://example.com/").',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: 'Service worker registration scope URL.',
+        required: true,
+      },
+    },
+  },
+  update_service_worker: {
+    description:
+      'Forces a service worker registration update (re-fetches the SW script and runs the install/activate cycle if changed).',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: '',
         required: true,
       },
     },
