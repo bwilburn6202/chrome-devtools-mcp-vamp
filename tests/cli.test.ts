@@ -21,6 +21,8 @@ describe('cli args parsing', () => {
     categoryExtensions: false,
     'category-experimental-in-page': false,
     categoryExperimentalInPage: false,
+    'category-storage': true,
+    categoryStorage: true,
     'auto-connect': undefined,
     autoConnect: undefined,
     'performance-crux': true,

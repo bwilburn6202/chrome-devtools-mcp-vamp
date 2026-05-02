@@ -519,6 +519,26 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
   - [`uninstall_extension`](docs/tool-reference.md#uninstall_extension)
 - **Memory** (1 tools)
   - [`take_memory_snapshot`](docs/tool-reference.md#take_memory_snapshot)
+- **Storage** (19 tools)
+  - [`clear_all_storage`](docs/tool-reference.md#clear_all_storage)
+  - [`clear_cookies`](docs/tool-reference.md#clear_cookies)
+  - [`clear_indexeddb_object_store`](docs/tool-reference.md#clear_indexeddb_object_store)
+  - [`clear_local_storage`](docs/tool-reference.md#clear_local_storage)
+  - [`clear_session_storage`](docs/tool-reference.md#clear_session_storage)
+  - [`delete_cache`](docs/tool-reference.md#delete_cache)
+  - [`delete_cache_entry`](docs/tool-reference.md#delete_cache_entry)
+  - [`delete_cookie`](docs/tool-reference.md#delete_cookie)
+  - [`delete_indexeddb_database`](docs/tool-reference.md#delete_indexeddb_database)
+  - [`get_cache_entries`](docs/tool-reference.md#get_cache_entries)
+  - [`get_indexeddb_data`](docs/tool-reference.md#get_indexeddb_data)
+  - [`get_local_storage`](docs/tool-reference.md#get_local_storage)
+  - [`get_session_storage`](docs/tool-reference.md#get_session_storage)
+  - [`list_caches`](docs/tool-reference.md#list_caches)
+  - [`list_cookies`](docs/tool-reference.md#list_cookies)
+  - [`list_indexeddb_databases`](docs/tool-reference.md#list_indexeddb_databases)
+  - [`set_cookie`](docs/tool-reference.md#set_cookie)
+  - [`set_local_storage`](docs/tool-reference.md#set_local_storage)
+  - [`set_session_storage`](docs/tool-reference.md#set_session_storage)
 
 <!-- END AUTO GENERATED TOOLS -->
 
@@ -626,6 +646,11 @@ The Chrome DevTools MCP server supports the following configuration option:
   Set to true to include tools related to extensions. Note: This feature is currently only supported with a pipe connection. autoConnect, browserUrl, and wsEndpoint are not supported with this feature until 149 will be released.
   - **Type:** boolean
   - **Default:** `false`
+
+- **`--categoryStorage`/ `--category-storage`**
+  Set to false to disable storage tools (cookies, localStorage, sessionStorage, IndexedDB, CacheStorage). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
 
 - **`--performanceCrux`/ `--performance-crux`**
   Set to false to disable sending URLs from performance traces to CrUX API to get field performance data.

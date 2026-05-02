@@ -23,6 +23,90 @@ export type Commands = Record<
   }
 >;
 export const commands: Commands = {
+  clear_all_storage: {
+    description:
+      'Clears one or more storage types for an origin via CDP `Storage.clearDataForOrigin`. Default: all storage types for the active page origin.',
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      types: {
+        name: 'types',
+        type: 'array',
+        description:
+          'Storage types to clear. If omitted, clears `all`. Common values: cookies, indexeddb, local_storage, cache_storage, service_workers.',
+        required: false,
+      },
+    },
+  },
+  clear_cookies: {
+    description:
+      "Clears all cookies for the active page's origin (or a provided origin) via CDP `Storage.clearDataForOrigin`.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description:
+          'Origin to clear cookies for. Default: current page origin.',
+        required: false,
+      },
+    },
+  },
+  clear_indexeddb_object_store: {
+    description: 'Clears all entries from an IndexedDB object store.',
+    category: 'Storage',
+    args: {
+      database: {
+        name: 'database',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      objectStore: {
+        name: 'objectStore',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  clear_local_storage: {
+    description:
+      "Clears localStorage on the active page's origin. If `key` is provided, removes only that key; otherwise removes everything.",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  clear_session_storage: {
+    description:
+      "Clears sessionStorage on the active page's origin (or a single key).",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   click: {
     description: 'Clicks on the provided element',
     category: 'Input automation',
@@ -92,6 +176,86 @@ export const commands: Commands = {
         description:
           'The ID of the page to close. Call list_pages to list pages.',
         required: true,
+      },
+    },
+  },
+  delete_cache: {
+    description: 'Deletes a CacheStorage cache by cacheId.',
+    category: 'Storage',
+    args: {
+      cacheId: {
+        name: 'cacheId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  delete_cache_entry: {
+    description:
+      'Deletes a single entry (request URL) from a CacheStorage cache.',
+    category: 'Storage',
+    args: {
+      cacheId: {
+        name: 'cacheId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      request: {
+        name: 'request',
+        type: 'string',
+        description: 'Request URL to remove from the cache.',
+        required: true,
+      },
+    },
+  },
+  delete_cookie: {
+    description:
+      'Deletes a single cookie matching the given filter from the active browser context.',
+    category: 'Storage',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: 'Cookie name.',
+        required: true,
+      },
+      domain: {
+        name: 'domain',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      path: {
+        name: 'path',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      url: {
+        name: 'url',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  delete_indexeddb_database: {
+    description: 'Deletes an IndexedDB database for the given origin.',
+    category: 'Storage',
+    args: {
+      database: {
+        name: 'database',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
       },
     },
   },
@@ -243,6 +407,37 @@ export const commands: Commands = {
       },
     },
   },
+  get_cache_entries: {
+    description:
+      'Returns entries (URL + response metadata) for a single cache. Paginated.',
+    category: 'Storage',
+    args: {
+      cacheId: {
+        name: 'cacheId',
+        type: 'string',
+        description: 'cacheId obtained from `list_caches`.',
+        required: true,
+      },
+      pageSize: {
+        name: 'pageSize',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pageIdx: {
+        name: 'pageIdx',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pathFilter: {
+        name: 'pathFilter',
+        type: 'string',
+        description: 'Optional substring filter on request URL path.',
+        required: false,
+      },
+    },
+  },
   get_console_message: {
     description:
       'Gets a console message by its ID. You can get all messages by calling list_console_messages.',
@@ -254,6 +449,64 @@ export const commands: Commands = {
         description:
           'The msgid of a console message on the page from the listed console messages',
         required: true,
+      },
+    },
+  },
+  get_indexeddb_data: {
+    description:
+      'Returns entries from an IndexedDB object store. Paginated via pageSize/pageIdx.',
+    category: 'Storage',
+    args: {
+      database: {
+        name: 'database',
+        type: 'string',
+        description: 'Database name.',
+        required: true,
+      },
+      objectStore: {
+        name: 'objectStore',
+        type: 'string',
+        description: 'Object store name.',
+        required: true,
+      },
+      indexName: {
+        name: 'indexName',
+        type: 'string',
+        description:
+          'Optional index name. If omitted, queries the primary key.',
+        required: false,
+      },
+      pageSize: {
+        name: 'pageSize',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pageIdx: {
+        name: 'pageIdx',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  get_local_storage: {
+    description:
+      "Returns all localStorage entries for the active page's origin.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description:
+          'Informational only — the page is not navigated. Default: page origin.',
+        required: false,
       },
     },
   },
@@ -342,6 +595,19 @@ export const commands: Commands = {
       },
     },
   },
+  get_session_storage: {
+    description:
+      "Returns all sessionStorage entries for the active page's origin.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   handle_dialog: {
     description:
       'If a browser dialog was opened, use this command to handle it',
@@ -425,6 +691,18 @@ export const commands: Commands = {
       },
     },
   },
+  list_caches: {
+    description: 'Lists CacheStorage caches accessible from the active page.',
+    category: 'Storage',
+    args: {
+      securityOrigin: {
+        name: 'securityOrigin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   list_console_messages: {
     description:
       'List all console messages for the currently selected page since the last navigation.',
@@ -461,11 +739,37 @@ export const commands: Commands = {
       },
     },
   },
+  list_cookies: {
+    description:
+      'Lists cookies for the active browser context. Optionally filter by URL(s); without a filter, returns all cookies in the active browser context.',
+    category: 'Storage',
+    args: {
+      urls: {
+        name: 'urls',
+        type: 'array',
+        description:
+          'Optional list of URLs to filter cookies by. Cookies whose domain/path match any URL are returned. Default: all cookies.',
+        required: false,
+      },
+    },
+  },
   list_extensions: {
     description:
       'Lists all the Chrome extensions installed in the browser. This includes their name, ID, version, and enabled status. (requires flag: --categoryExtensions=true)',
     category: 'Extensions',
     args: {},
+  },
+  list_indexeddb_databases: {
+    description: "Lists IndexedDB database names for the active page's origin.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
   },
   list_network_requests: {
     description:
@@ -764,6 +1068,106 @@ export const commands: Commands = {
         type: 'boolean',
         description: 'Whether to focus the page and bring it to the top.',
         required: false,
+      },
+    },
+  },
+  set_cookie: {
+    description:
+      'Sets a cookie in the active browser context. At least one of `url` or `domain` must be provided.',
+    category: 'Storage',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: 'Cookie name.',
+        required: true,
+      },
+      value: {
+        name: 'value',
+        type: 'string',
+        description: 'Cookie value.',
+        required: true,
+      },
+      url: {
+        name: 'url',
+        type: 'string',
+        description:
+          'URL for which the cookie applies (sets domain/path/secure).',
+        required: false,
+      },
+      domain: {
+        name: 'domain',
+        type: 'string',
+        description: 'Cookie domain.',
+        required: false,
+      },
+      path: {
+        name: 'path',
+        type: 'string',
+        description: 'Cookie path. Default "/".',
+        required: false,
+      },
+      expires: {
+        name: 'expires',
+        type: 'number',
+        description:
+          'Expiration time in seconds since UNIX epoch. Omit for session cookie.',
+        required: false,
+      },
+      httpOnly: {
+        name: 'httpOnly',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+      secure: {
+        name: 'secure',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+      sameSite: {
+        name: 'sameSite',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['Strict', 'Lax', 'None'],
+      },
+    },
+  },
+  set_local_storage: {
+    description: "Sets a localStorage entry on the active page's origin.",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      value: {
+        name: 'value',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  set_session_storage: {
+    description: "Sets a sessionStorage entry on the active page's origin.",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      value: {
+        name: 'value',
+        type: 'string',
+        description: '',
+        required: true,
       },
     },
   },

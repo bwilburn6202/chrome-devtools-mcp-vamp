@@ -1,6 +1,6 @@
 <!-- AUTO GENERATED DO NOT EDIT - run 'npm run gen' to update-->
 
-# Chrome DevTools MCP Tool Reference (~7057 cl100k_base tokens)
+# Chrome DevTools MCP Tool Reference (~10350 cl100k_base tokens)
 
 - **[Input automation](#input-automation)** (9 tools)
   - [`click`](#click)
@@ -44,6 +44,26 @@
   - [`uninstall_extension`](#uninstall_extension)
 - **[Memory](#memory)** (1 tools)
   - [`take_memory_snapshot`](#take_memory_snapshot)
+- **[Storage](#storage)** (19 tools)
+  - [`clear_all_storage`](#clear_all_storage)
+  - [`clear_cookies`](#clear_cookies)
+  - [`clear_indexeddb_object_store`](#clear_indexeddb_object_store)
+  - [`clear_local_storage`](#clear_local_storage)
+  - [`clear_session_storage`](#clear_session_storage)
+  - [`delete_cache`](#delete_cache)
+  - [`delete_cache_entry`](#delete_cache_entry)
+  - [`delete_cookie`](#delete_cookie)
+  - [`delete_indexeddb_database`](#delete_indexeddb_database)
+  - [`get_cache_entries`](#get_cache_entries)
+  - [`get_indexeddb_data`](#get_indexeddb_data)
+  - [`get_local_storage`](#get_local_storage)
+  - [`get_session_storage`](#get_session_storage)
+  - [`list_caches`](#list_caches)
+  - [`list_cookies`](#list_cookies)
+  - [`list_indexeddb_databases`](#list_indexeddb_databases)
+  - [`set_cookie`](#set_cookie)
+  - [`set_local_storage`](#set_local_storage)
+  - [`set_session_storage`](#set_session_storage)
 
 ## Input automation
 
@@ -458,5 +478,223 @@ in the DevTools Elements panel (if any).
 **Parameters:**
 
 - **filePath** (string) **(required)**: A path to a .heapsnapshot file to save the heapsnapshot to.
+
+---
+
+## Storage
+
+### `clear_all_storage`
+
+**Description:** Clears one or more storage types for an origin via CDP `Storage.clearDataForOrigin`. Default: all storage types for the active page origin.
+
+**Parameters:**
+
+- **origin** (string) _(optional)_
+- **types** (array) _(optional)_: Storage types to clear. If omitted, clears `all`. Common values: cookies, indexeddb, local_storage, cache_storage, service_workers.
+
+---
+
+### `clear_cookies`
+
+**Description:** Clears all cookies for the active page's origin (or a provided origin) via CDP `Storage.clearDataForOrigin`.
+
+**Parameters:**
+
+- **origin** (string) _(optional)_: Origin to clear cookies for. Default: current page origin.
+
+---
+
+### `clear_indexeddb_object_store`
+
+**Description:** Clears all entries from an IndexedDB object store.
+
+**Parameters:**
+
+- **database** (string) **(required)**
+- **objectStore** (string) **(required)**
+- **origin** (string) _(optional)_
+
+---
+
+### `clear_local_storage`
+
+**Description:** Clears localStorage on the active page's origin. If `key` is provided, removes only that key; otherwise removes everything.
+
+**Parameters:**
+
+- **key** (string) _(optional)_
+
+---
+
+### `clear_session_storage`
+
+**Description:** Clears sessionStorage on the active page's origin (or a single key).
+
+**Parameters:**
+
+- **key** (string) _(optional)_
+
+---
+
+### `delete_cache`
+
+**Description:** Deletes a CacheStorage cache by cacheId.
+
+**Parameters:**
+
+- **cacheId** (string) **(required)**
+
+---
+
+### `delete_cache_entry`
+
+**Description:** Deletes a single entry (request URL) from a CacheStorage cache.
+
+**Parameters:**
+
+- **cacheId** (string) **(required)**
+- **request** (string) **(required)**: Request URL to remove from the cache.
+
+---
+
+### `delete_cookie`
+
+**Description:** Deletes a single cookie matching the given filter from the active browser context.
+
+**Parameters:**
+
+- **name** (string) **(required)**: Cookie name.
+- **domain** (string) _(optional)_
+- **path** (string) _(optional)_
+- **url** (string) _(optional)_
+
+---
+
+### `delete_indexeddb_database`
+
+**Description:** Deletes an IndexedDB database for the given origin.
+
+**Parameters:**
+
+- **database** (string) **(required)**
+- **origin** (string) _(optional)_
+
+---
+
+### `get_cache_entries`
+
+**Description:** Returns entries (URL + response metadata) for a single cache. Paginated.
+
+**Parameters:**
+
+- **cacheId** (string) **(required)**: cacheId obtained from `[`list_caches`](#list_caches)`.
+- **pageIdx** (integer) _(optional)_
+- **pageSize** (integer) _(optional)_
+- **pathFilter** (string) _(optional)_: Optional substring filter on request URL path.
+
+---
+
+### `get_indexeddb_data`
+
+**Description:** Returns entries from an IndexedDB object store. Paginated via pageSize/pageIdx.
+
+**Parameters:**
+
+- **database** (string) **(required)**: Database name.
+- **objectStore** (string) **(required)**: Object store name.
+- **indexName** (string) _(optional)_: Optional index name. If omitted, queries the primary key.
+- **origin** (string) _(optional)_
+- **pageIdx** (integer) _(optional)_
+- **pageSize** (integer) _(optional)_
+
+---
+
+### `get_local_storage`
+
+**Description:** Returns all localStorage entries for the active page's origin.
+
+**Parameters:**
+
+- **origin** (string) _(optional)_: Informational only — the page is not navigated. Default: page origin.
+
+---
+
+### `get_session_storage`
+
+**Description:** Returns all sessionStorage entries for the active page's origin.
+
+**Parameters:**
+
+- **origin** (string) _(optional)_
+
+---
+
+### `list_caches`
+
+**Description:** Lists CacheStorage caches accessible from the active page.
+
+**Parameters:**
+
+- **securityOrigin** (string) _(optional)_
+
+---
+
+### `list_cookies`
+
+**Description:** Lists cookies for the active browser context. Optionally filter by URL(s); without a filter, returns all cookies in the active browser context.
+
+**Parameters:**
+
+- **urls** (array) _(optional)_: Optional list of URLs to filter cookies by. Cookies whose domain/path match any URL are returned. Default: all cookies.
+
+---
+
+### `list_indexeddb_databases`
+
+**Description:** Lists IndexedDB database names for the active page's origin.
+
+**Parameters:**
+
+- **origin** (string) _(optional)_
+
+---
+
+### `set_cookie`
+
+**Description:** Sets a cookie in the active browser context. At least one of `url` or `domain` must be provided.
+
+**Parameters:**
+
+- **name** (string) **(required)**: Cookie name.
+- **value** (string) **(required)**: Cookie value.
+- **domain** (string) _(optional)_: Cookie domain.
+- **expires** (number) _(optional)_: Expiration time in seconds since UNIX epoch. Omit for session cookie.
+- **httpOnly** (boolean) _(optional)_
+- **path** (string) _(optional)_: Cookie path. Default "/".
+- **sameSite** (enum: "Strict", "Lax", "None") _(optional)_
+- **secure** (boolean) _(optional)_
+- **url** (string) _(optional)_: URL for which the cookie applies (sets domain/path/secure).
+
+---
+
+### `set_local_storage`
+
+**Description:** Sets a localStorage entry on the active page's origin.
+
+**Parameters:**
+
+- **key** (string) **(required)**
+- **value** (string) **(required)**
+
+---
+
+### `set_session_storage`
+
+**Description:** Sets a sessionStorage entry on the active page's origin.
+
+**Parameters:**
+
+- **key** (string) **(required)**
+- **value** (string) **(required)**
 
 ---

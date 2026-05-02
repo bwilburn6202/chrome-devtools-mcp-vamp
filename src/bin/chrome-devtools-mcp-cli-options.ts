@@ -244,6 +244,12 @@ export const cliOptions = {
     describe:
       'Set to true to enable tools exposed by the inspected page itself',
   },
+  categoryStorage: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable storage tools (cookies, localStorage, sessionStorage, IndexedDB, CacheStorage). Default true.',
+  },
   performanceCrux: {
     type: 'boolean',
     default: true,

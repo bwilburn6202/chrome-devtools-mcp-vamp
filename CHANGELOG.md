@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 2: storage tools
+
+Adds the on-by-default `STORAGE` tool category, covering capabilities that
+were previously inaccessible through this MCP. Disable with
+`--no-categoryStorage`.
+
+### New tools
+
+- `list_cookies({urls?})`, `set_cookie({name, value, url?, domain?, ...})`,
+  `delete_cookie({name, ...})`, `clear_cookies({origin?})`.
+- `get_local_storage`, `set_local_storage`, `clear_local_storage` (and
+  `*_session_storage` mirrors).
+- `list_indexeddb_databases`, `get_indexeddb_data` (paginated),
+  `delete_indexeddb_database`, `clear_indexeddb_object_store`.
+- `list_caches`, `get_cache_entries` (paginated), `delete_cache`,
+  `delete_cache_entry`.
+- `clear_all_storage({origin?, types?})` — wraps CDP
+  `Storage.clearDataForOrigin`.
+
+Cookies use the `BrowserContext`-level Puppeteer API (the page-level API is
+deprecated upstream); web storage uses `page.evaluate`; IndexedDB and
+CacheStorage go through CDP because Puppeteer doesn't expose them.
+
 ## Unreleased — vamp fork, Phase 1: stability & correctness
 
 This release lays the groundwork for the multi-phase improvement plan in

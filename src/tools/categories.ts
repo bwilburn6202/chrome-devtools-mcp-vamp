@@ -14,6 +14,8 @@ export enum ToolCategory {
   EXTENSIONS = 'extensions',
   IN_PAGE = 'experimentalInPage',
   MEMORY = 'memory',
+  // Phase 2: cookies, localStorage, sessionStorage, IndexedDB, CacheStorage.
+  STORAGE = 'storage',
 }
 
 export const labels = {
@@ -26,6 +28,7 @@ export const labels = {
   [ToolCategory.EXTENSIONS]: 'Extensions',
   [ToolCategory.IN_PAGE]: 'In-page tools',
   [ToolCategory.MEMORY]: 'Memory',
+  [ToolCategory.STORAGE]: 'Storage',
 };
 
 export const OFF_BY_DEFAULT_CATEGORIES = [
