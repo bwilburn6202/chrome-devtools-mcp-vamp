@@ -1,5 +1,65 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 1: stability & correctness
+
+This release lays the groundwork for the multi-phase improvement plan in
+`docs/` by fixing architectural bottlenecks. No new tools yet — all changes
+are universal stability and bug fixes. Phases 2–6 (storage, network
+interception, CDP passthrough, service workers, debugger/coverage) follow in
+subsequent PRs.
+
+### Performance / concurrency
+
+* Per-page tool mutex (`MutexMap` keyed by page id). Different pages no
+  longer block each other; only operations on the same page serialize.
+* `Mutex.acquire()` now accepts `{timeoutMs, holderHint}` so a tool that
+  fails to release the lock surfaces as a `MutexAcquireTimeoutError` instead
+  of hanging indefinitely.
+* Snapshot caching on `McpPage`: `TextSnapshot` is reused unless the DOM
+  has been mutated since it was built (tracked via `framenavigated` and
+  `waitForEventsAfterAction` invalidation). New `forceRefresh` param on
+  `take_snapshot`.
+* `TextSnapshot` now exposes a `backendNodeId → node` index. Element
+  resolution (`McpPage.resolveCdpElementId`) is O(1) instead of BFS.
+* `HeapSnapshotManager` is now a bounded LRU (default 5 entries,
+  configurable via `--heapSnapshotCacheSize`) and disposes evicted workers.
+
+### Reliability
+
+* Daemon now captures the spawned MCP subprocess's stderr to a rotating log
+  at `<runtime-home>/mcp.log` (5 MiB rotation by default) instead of
+  silently discarding it.
+* Daemon watchdog: pings the MCP subprocess every 30 s; restarts the
+  subprocess if it misses 2 pings or its `tools/list` response times out.
+  Tunable via env vars `CHROME_DEVTOOLS_MCP_WATCHDOG_*`.
+* `UniverseManager.init` now caps total init time at 5 s. Failures degrade
+  to lazy on-demand creation rather than hanging server startup.
+* Performance trace history: `--traceHistoryLimit` (default 5) keeps the
+  last N traces in memory rather than clobbering on every recording.
+
+### Bug fixes
+
+* `take_screenshot` with `format: 'png'` and `quality` set now throws
+  instead of silently ignoring `quality`.
+* Snapshot UID reuse key now includes `frameId` so iframe reloads cannot
+  collide UIDs with the main frame.
+* `SnapshotFormatter` accepts a `maxNodes` cap (CLI: `--snapshotMaxNodes`,
+  default 5000) and emits a truncation marker for huge DOMs.
+* Page dialogs are now queued (`McpPage.pendingDialogCount()`) instead of
+  single-slot, so rapid bursts of alerts are not lost.
+* Renamed misspelled internal helper
+  `converNetworkRequestDetailedToStringDetailed` →
+  `convertNetworkRequestDetailedToStringDetailed`.
+
+### New CLI flags (all hidden, defaults preserve prior behavior)
+
+`--toolMutexTimeoutMs`, `--dragDelayMs`, `--fileChooserTimeoutMs`,
+`--fillCharMultiplierMs`, `--lighthouseMaxWaitMs`,
+`--slimNavigateTimeoutMs`, `--performanceAutoStopMs`,
+`--stackTraceTimeoutMs`, `--screenshotInlineLimitBytes`,
+`--consoleStackMaxFrames`, `--snapshotMaxNodes`, `--traceHistoryLimit`,
+`--heapSnapshotCacheSize`.
+
 ## [0.23.0](https://github.com/ChromeDevTools/chrome-devtools-mcp/compare/chrome-devtools-mcp-v0.22.0...chrome-devtools-mcp-v0.23.0) (2026-04-22)
 
 

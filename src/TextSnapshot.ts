@@ -23,6 +23,10 @@ export class TextSnapshot {
 
   root: TextSnapshotNode;
   idToNode: Map<string, TextSnapshotNode>;
+  // Phase 1.3: O(1) lookup by backendNodeId. Built lazily on first access so
+  // legacy callers and tests that construct TextSnapshot via object casts
+  // (without going through the constructor) continue to work.
+  #backendNodeIdToNode?: Map<number, TextSnapshotNode>;
   snapshotId: string;
   selectedElementUid?: string;
   hasSelectedElement: boolean;
@@ -31,6 +35,7 @@ export class TextSnapshot {
   constructor(data: {
     root: TextSnapshotNode;
     idToNode: Map<string, TextSnapshotNode>;
+    backendNodeIdToNode?: Map<number, TextSnapshotNode>;
     snapshotId: string;
     selectedElementUid?: string;
     hasSelectedElement: boolean;
@@ -38,10 +43,20 @@ export class TextSnapshot {
   }) {
     this.root = data.root;
     this.idToNode = data.idToNode;
+    if (data.backendNodeIdToNode) {
+      this.#backendNodeIdToNode = data.backendNodeIdToNode;
+    }
     this.snapshotId = data.snapshotId;
     this.selectedElementUid = data.selectedElementUid;
     this.hasSelectedElement = data.hasSelectedElement;
     this.verbose = data.verbose;
+  }
+
+  get backendNodeIdToNode(): Map<number, TextSnapshotNode> {
+    if (!this.#backendNodeIdToNode) {
+      this.#backendNodeIdToNode = buildBackendNodeIdIndex(this.idToNode);
+    }
+    return this.#backendNodeIdToNode;
   }
 
   static async create(
@@ -75,7 +90,13 @@ export class TextSnapshot {
       // @ts-expect-error untyped backendNodeId.
       const backendNodeId: number = node.backendNodeId;
       // @ts-expect-error untyped loaderId.
-      const uniqueBackendId = `${node.loaderId}_${backendNodeId}`;
+      const loaderId: string | undefined = node.loaderId;
+      // @ts-expect-error untyped frameId.
+      const frameId: string | undefined = node.frameId;
+      // Phase 1.7 bug fix: include frameId in the reuse key so iframe reloads
+      // (which change loaderId for the iframe but keep main-frame loaderId
+      // stable) cannot collide with main-frame backendNodeIds.
+      const uniqueBackendId = `${frameId ?? ''}|${loaderId ?? ''}|${backendNodeId}`;
       const existingMcpId = uniqueBackendNodeIdToMcpId.get(uniqueBackendId);
       if (existingMcpId !== undefined) {
         // Re-use MCP exposed ID if the uniqueId is the same.
@@ -126,6 +147,7 @@ export class TextSnapshot {
       root: rootNodeWithId,
       snapshotId: String(snapshotId),
       idToNode,
+      backendNodeIdToNode: buildBackendNodeIdIndex(idToNode),
       hasSelectedElement: false,
       verbose,
     });
@@ -322,4 +344,21 @@ export class TextSnapshot {
       attachTarget.children.splice(index, 0, extraNode);
     }
   }
+}
+
+/**
+ * Phase 1.3: build a backendNodeId → TextSnapshotNode index from the
+ * idToNode map. Used both during snapshot construction and on-demand from the
+ * constructor when the index isn't supplied (e.g. by tests).
+ */
+function buildBackendNodeIdIndex(
+  idToNode: Map<string, TextSnapshotNode>,
+): Map<number, TextSnapshotNode> {
+  const index = new Map<number, TextSnapshotNode>();
+  for (const node of idToNode.values()) {
+    if (typeof node.backendNodeId === 'number') {
+      index.set(node.backendNodeId, node);
+    }
+  }
+  return index;
 }

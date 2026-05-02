@@ -17,18 +17,24 @@ import {
 export type AggregatedInfoWithUid =
   WithSymbolId<DevTools.HeapSnapshotModel.HeapSnapshotModel.AggregatedInfo>;
 
+interface CachedHeapSnapshot {
+  snapshot: DevTools.HeapSnapshotModel.HeapSnapshotProxy.HeapSnapshotProxy;
+  worker: DevTools.HeapSnapshotModel.HeapSnapshotProxy.HeapSnapshotWorkerProxy;
+  uidToClassKey: Map<number, string>;
+  classKeyToUid: Map<string, number>;
+  idGenerator: () => number;
+}
+
 export class HeapSnapshotManager {
-  #snapshots = new Map<
-    string,
-    {
-      snapshot: DevTools.HeapSnapshotModel.HeapSnapshotProxy.HeapSnapshotProxy;
-      worker: DevTools.HeapSnapshotModel.HeapSnapshotProxy.HeapSnapshotWorkerProxy;
-      // TODO: use a multimap
-      uidToClassKey: Map<number, string>;
-      classKeyToUid: Map<string, number>;
-      idGenerator: () => number;
-    }
-  >();
+  // Phase 1.4: bounded LRU. Map iteration order is insertion order, so
+  // bumping an entry on access (delete + set) implements LRU. When the cache
+  // is over capacity, the oldest entry is evicted and its worker disposed.
+  #snapshots = new Map<string, CachedHeapSnapshot>();
+  #maxCacheSize: number;
+
+  constructor(options?: {maxCacheSize?: number}) {
+    this.#maxCacheSize = Math.max(1, options?.maxCacheSize ?? 5);
+  }
 
   async getSnapshot(
     filePath: string,
@@ -36,6 +42,9 @@ export class HeapSnapshotManager {
     const absolutePath = path.resolve(filePath);
     const cached = this.#snapshots.get(absolutePath);
     if (cached) {
+      // Bump for LRU.
+      this.#snapshots.delete(absolutePath);
+      this.#snapshots.set(absolutePath, cached);
       return cached.snapshot;
     }
 
@@ -47,8 +56,36 @@ export class HeapSnapshotManager {
       classKeyToUid: new Map<string, number>(),
       idGenerator: createIdGenerator(),
     });
+    this.#evictIfNeeded();
 
     return snapshot;
+  }
+
+  #evictIfNeeded(): void {
+    while (this.#snapshots.size > this.#maxCacheSize) {
+      const oldestKey = this.#snapshots.keys().next().value;
+      if (oldestKey === undefined) {
+        return;
+      }
+      const oldest = this.#snapshots.get(oldestKey);
+      this.#snapshots.delete(oldestKey);
+      try {
+        oldest?.worker.dispose();
+      } catch {
+        // Worker may already be disposed; ignore.
+      }
+    }
+  }
+
+  disposeAll(): void {
+    for (const cached of this.#snapshots.values()) {
+      try {
+        cached.worker.dispose();
+      } catch {
+        // ignore
+      }
+    }
+    this.#snapshots.clear();
   }
 
   async getAggregates(

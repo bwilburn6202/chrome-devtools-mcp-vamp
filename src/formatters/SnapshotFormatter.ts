@@ -7,11 +7,26 @@
 import type {TextSnapshot} from '../TextSnapshot.js';
 import type {TextSnapshotNode} from '../types.js';
 
-export class SnapshotFormatter {
-  #snapshot: TextSnapshot;
+// SnapshotFormatter only reads a small slice of TextSnapshot. Accept the
+// structural shape so tests and other callers can pass plain object literals
+// without depending on the full class (in particular, the lazy
+// `backendNodeIdToNode` getter added in Phase 1.3).
+interface SnapshotInput {
+  root: TextSnapshot['root'];
+  verbose: TextSnapshot['verbose'];
+  hasSelectedElement: TextSnapshot['hasSelectedElement'];
+  selectedElementUid?: TextSnapshot['selectedElementUid'];
+}
 
-  constructor(snapshot: TextSnapshot) {
+export class SnapshotFormatter {
+  #snapshot: SnapshotInput;
+  // Phase 1.7: max nodes formatted before truncation. Caps memory blow-ups
+  // on giant DOMs. 0 / undefined disables the cap.
+  #maxNodes: number | undefined;
+
+  constructor(snapshot: SnapshotInput, options?: {maxNodes?: number}) {
     this.#snapshot = snapshot;
+    this.#maxNodes = options?.maxNodes;
   }
 
   toString(): string {
@@ -28,15 +43,33 @@ export class SnapshotFormatter {
 Get a verbose snapshot to include all elements if you are interested in the selected element.\n\n`);
     }
 
-    chunks.push(this.#formatNode(root, 0));
+    const counter = {emitted: 0, truncated: false};
+    chunks.push(this.#formatNode(root, 0, counter));
+    if (counter.truncated && this.#maxNodes) {
+      chunks.push(
+        `\n... [snapshot truncated at ${this.#maxNodes} nodes; pass --snapshotMaxNodes to raise the cap]\n`,
+      );
+    }
     return chunks.join('');
   }
 
   toJSON(): object {
-    return this.#nodeToJSON(this.#snapshot.root);
+    const counter = {emitted: 0, truncated: false};
+    return this.#nodeToJSON(this.#snapshot.root, counter);
   }
 
-  #formatNode(node: TextSnapshotNode, depth = 0): string {
+  #formatNode(
+    node: TextSnapshotNode,
+    depth = 0,
+    counter?: {emitted: number; truncated: boolean},
+  ): string {
+    if (counter && this.#maxNodes && counter.emitted >= this.#maxNodes) {
+      counter.truncated = true;
+      return '';
+    }
+    if (counter) {
+      counter.emitted++;
+    }
     const chunks: string[] = [];
     const attributes = this.#getAttributes(node);
     const line =
@@ -49,14 +82,26 @@ Get a verbose snapshot to include all elements if you are interested in the sele
     chunks.push(line);
 
     for (const child of node.children) {
-      chunks.push(this.#formatNode(child, depth + 1));
+      chunks.push(this.#formatNode(child, depth + 1, counter));
     }
     return chunks.join('');
   }
 
-  #nodeToJSON(node: TextSnapshotNode): object {
+  #nodeToJSON(
+    node: TextSnapshotNode,
+    counter?: {emitted: number; truncated: boolean},
+  ): object {
+    if (counter && this.#maxNodes && counter.emitted >= this.#maxNodes) {
+      counter.truncated = true;
+      return {truncated: true};
+    }
+    if (counter) {
+      counter.emitted++;
+    }
     const rawAttrs = this.#getAttributesMap(node);
-    const children = node.children.map(child => this.#nodeToJSON(child));
+    const children = node.children.map(child =>
+      this.#nodeToJSON(child, counter),
+    );
     const result: Record<string, unknown> = structuredClone(rawAttrs);
     if (children.length > 0) {
       result.children = children;

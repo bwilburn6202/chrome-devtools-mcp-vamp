@@ -1,6 +1,6 @@
 <!-- AUTO GENERATED DO NOT EDIT - run 'npm run gen' to update-->
 
-# Chrome DevTools MCP Tool Reference (~7005 cl100k_base tokens)
+# Chrome DevTools MCP Tool Reference (~7057 cl100k_base tokens)
 
 - **[Input automation](#input-automation)** (9 tools)
   - [`click`](#click)
@@ -392,6 +392,7 @@ in the DevTools Elements panel (if any).
 **Parameters:**
 
 - **filePath** (string) _(optional)_: The absolute path, or a path relative to the current working directory, to save the snapshot to instead of attaching it to the response.
+- **forceRefresh** (boolean) _(optional)_: When true, ignore any cached snapshot and rebuild from scratch. Default false; the cached snapshot is reused when no DOM mutation has been observed since it was built.
 - **verbose** (boolean) _(optional)_: Whether to include all possible information available in the full a11y tree. Default is false.
 
 ---

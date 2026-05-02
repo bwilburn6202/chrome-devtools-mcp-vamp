@@ -288,6 +288,96 @@ export const cliOptions = {
       'If true, redacts some of the network headers considered senstive before returning to the client.',
     default: false,
   },
+  toolMutexTimeoutMs: {
+    type: 'number',
+    default: 0,
+    hidden: true,
+    describe:
+      'Per-page tool mutex acquire timeout in milliseconds. 0 disables the timeout (default). When set, a tool that has been waiting longer than this for the lock will fail with MutexAcquireTimeoutError instead of hanging.',
+  },
+  dragDelayMs: {
+    type: 'number',
+    default: 50,
+    hidden: true,
+    describe:
+      'Delay between drag and drop steps in `drag` tool, in milliseconds.',
+  },
+  fileChooserTimeoutMs: {
+    type: 'number',
+    default: 3000,
+    hidden: true,
+    describe:
+      'Maximum time to wait for a file chooser dialog in `upload_file` tool, in milliseconds.',
+  },
+  fillCharMultiplierMs: {
+    type: 'number',
+    default: 10,
+    hidden: true,
+    describe:
+      'Per-character timeout multiplier added to the base fill timeout in `fill` and `fill_form` tools, in milliseconds.',
+  },
+  lighthouseMaxWaitMs: {
+    type: 'number',
+    default: 30000,
+    hidden: true,
+    describe:
+      'Maximum time Lighthouse waits for the page to load before failing the audit, in milliseconds.',
+  },
+  slimNavigateTimeoutMs: {
+    type: 'number',
+    default: 30000,
+    hidden: true,
+    describe:
+      'Navigation timeout used by the slim-mode `navigate` tool, in milliseconds.',
+  },
+  performanceAutoStopMs: {
+    type: 'number',
+    default: 5000,
+    hidden: true,
+    describe:
+      'Auto-stop delay after `performance_start_trace` when autoStop=true, in milliseconds.',
+  },
+  stackTraceTimeoutMs: {
+    type: 'number',
+    default: 1000,
+    hidden: true,
+    describe:
+      'Timeout for waiting on script availability when symbolicating stack traces, in milliseconds.',
+  },
+  screenshotInlineLimitBytes: {
+    type: 'number',
+    default: 2 * 1024 * 1024,
+    hidden: true,
+    describe:
+      'Screenshots larger than this are written to a temp file instead of being inlined in the response. Default 2 MiB.',
+  },
+  consoleStackMaxFrames: {
+    type: 'number',
+    default: 50,
+    hidden: true,
+    describe: 'Maximum number of stack frames included in console messages.',
+  },
+  snapshotMaxNodes: {
+    type: 'number',
+    default: 5000,
+    hidden: true,
+    describe:
+      'Maximum nodes included in a text snapshot. Excess nodes are truncated to prevent memory blow-ups on huge DOMs.',
+  },
+  traceHistoryLimit: {
+    type: 'number',
+    default: 5,
+    hidden: true,
+    describe:
+      'Number of recent performance traces to keep in memory for `performance_analyze_insight`.',
+  },
+  heapSnapshotCacheSize: {
+    type: 'number',
+    default: 5,
+    hidden: true,
+    describe:
+      'Maximum number of heap snapshots kept in the in-memory LRU cache. Older snapshots are evicted and their workers disposed.',
+  },
 } satisfies Record<string, YargsOptions>;
 
 export type ParsedArguments = ReturnType<typeof parseArguments>;

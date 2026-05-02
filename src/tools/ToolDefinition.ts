@@ -72,6 +72,12 @@ export interface ImageContentData {
 export interface SnapshotParams {
   verbose?: boolean;
   filePath?: string;
+  /**
+   * Phase 1.2: when true, ignore the cached snapshot and rebuild from scratch.
+   * Default false — the McpResponse layer reuses the cached snapshot when no
+   * mutation has occurred since it was built.
+   */
+  forceRefresh?: boolean;
 }
 
 export interface LighthouseData {
@@ -167,6 +173,20 @@ export type SupportedExtensions =
   | '.csv'
   | '.json.gz';
 
+/** Phase 1.6: per-tool tunables (drag delays, lighthouse timeouts, etc.). */
+export interface ToolTuning {
+  dragDelayMs: number;
+  fileChooserTimeoutMs: number;
+  fillCharMultiplierMs: number;
+  lighthouseMaxWaitMs: number;
+  slimNavigateTimeoutMs: number;
+  performanceAutoStopMs: number;
+  screenshotInlineLimitBytes: number;
+  snapshotMaxNodes: number;
+  consoleStackMaxFrames: number;
+  stackTraceTimeoutMs: number;
+}
+
 /**
  * Only add methods used by tools/*.
  */
@@ -175,6 +195,8 @@ export type Context = Readonly<{
   isRunningPerformanceTrace(): boolean;
   setIsRunningPerformanceTrace(x: boolean): void;
   isCruxEnabled(): boolean;
+  /** Phase 1.6: tunables for hardcoded constants (defaults merged with user CLI flags). */
+  getTuning(): ToolTuning;
   recordedTraces(): TraceResult[];
   storeTraceRecording(result: TraceResult): void;
   getPageById(pageId: number): ContextPage;

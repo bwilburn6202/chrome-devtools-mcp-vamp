@@ -101,7 +101,9 @@ export const startTrace = definePageTool({
     }
 
     if (request.params.autoStop) {
-      await new Promise(resolve => setTimeout(resolve, 5_000));
+      // Phase 1.6: configurable via --performanceAutoStopMs (default 5000).
+      const autoStopMs = context.getTuning().performanceAutoStopMs;
+      await new Promise(resolve => setTimeout(resolve, autoStopMs));
       await stopTracingAndAppendOutput(
         page.pptrPage,
         response,

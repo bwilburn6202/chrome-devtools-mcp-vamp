@@ -59,8 +59,8 @@ export const lighthouseAudit = definePageTool({
     const flags: Flags = {
       onlyCategories: categories,
       output: formats,
-      // Default 30 second timeout for page load.
-      maxWaitForLoad: 30_000,
+      // Phase 1.6: configurable via --lighthouseMaxWaitMs (default 30000).
+      maxWaitForLoad: context.getTuning().lighthouseMaxWaitMs,
     };
 
     if (device === 'desktop') {

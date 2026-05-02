@@ -335,7 +335,16 @@ function formatArg(arg: unknown, formatter: {isIgnored: IgnoreCheck}) {
   return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
 }
 
-const STACK_TRACE_MAX_LINES = 50;
+// Phase 1.6: tunable via setStackTraceMaxLines() (called from McpResponse
+// using context.getTuning().consoleStackMaxFrames). 50 preserves the
+// historical default.
+let STACK_TRACE_MAX_LINES = 50;
+
+export function setStackTraceMaxLines(n: number): void {
+  if (Number.isFinite(n) && n > 0) {
+    STACK_TRACE_MAX_LINES = Math.floor(n);
+  }
+}
 
 function formatStackTrace(
   stackTrace: DevTools.DevTools.StackTrace.StackTrace.StackTrace,

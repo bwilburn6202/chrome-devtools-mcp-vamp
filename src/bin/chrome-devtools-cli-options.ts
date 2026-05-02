@@ -843,6 +843,13 @@ export const commands: Commands = {
           'The absolute path, or a path relative to the current working directory, to save the snapshot to instead of attaching it to the response.',
         required: false,
       },
+      forceRefresh: {
+        name: 'forceRefresh',
+        type: 'boolean',
+        description:
+          'When true, ignore any cached snapshot and rebuild from scratch. Default false; the cached snapshot is reused when no DOM mutation has been observed since it was built.',
+        required: false,
+      },
     },
   },
   trigger_extension_action: {

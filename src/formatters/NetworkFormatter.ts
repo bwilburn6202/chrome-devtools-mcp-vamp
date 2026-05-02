@@ -148,7 +148,7 @@ export class NetworkFormatter {
   }
 
   toStringDetailed(): string {
-    return converNetworkRequestDetailedToStringDetailed(this.toJSONDetailed());
+    return convertNetworkRequestDetailedToStringDetailed(this.toJSONDetailed());
   }
 
   toJSON(): NetworkRequestConcise {
@@ -271,7 +271,7 @@ function formatHeadlers(headers: Record<string, string>): string[] {
   return response;
 }
 
-function converNetworkRequestDetailedToStringDetailed(
+function convertNetworkRequestDetailedToStringDetailed(
   data: NetworkRequestDetailed,
 ): string {
   const response: string[] = [];

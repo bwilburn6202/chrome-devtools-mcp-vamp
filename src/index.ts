@@ -9,11 +9,12 @@ import type fs from 'node:fs';
 import type {parseArguments} from './bin/chrome-devtools-mcp-cli-options.js';
 import type {Channel} from './browser.js';
 import {ensureBrowserConnected, ensureBrowserLaunched} from './browser.js';
+import {setStackTraceMaxLines} from './formatters/ConsoleFormatter.js';
 import {loadIssueDescriptions} from './issue-descriptions.js';
 import {logger} from './logger.js';
 import {McpContext} from './McpContext.js';
 import {McpResponse} from './McpResponse.js';
-import {Mutex} from './Mutex.js';
+import {Mutex, MutexMap} from './Mutex.js';
 import {SlimMcpResponse} from './SlimMcpResponse.js';
 import {ClearcutLogger} from './telemetry/ClearcutLogger.js';
 import {bucketizeLatency} from './telemetry/metricUtils.js';
@@ -232,13 +233,40 @@ export async function createMcpServer(
         experimentalDevToolsDebugging: devtools,
         experimentalIncludeAllPages: serverArgs.experimentalIncludeAllPages,
         performanceCrux: serverArgs.performanceCrux,
+        heapSnapshotCacheSize: serverArgs.heapSnapshotCacheSize,
+        traceHistoryLimit: serverArgs.traceHistoryLimit,
+        tuning: {
+          dragDelayMs: serverArgs.dragDelayMs,
+          fileChooserTimeoutMs: serverArgs.fileChooserTimeoutMs,
+          fillCharMultiplierMs: serverArgs.fillCharMultiplierMs,
+          lighthouseMaxWaitMs: serverArgs.lighthouseMaxWaitMs,
+          slimNavigateTimeoutMs: serverArgs.slimNavigateTimeoutMs,
+          performanceAutoStopMs: serverArgs.performanceAutoStopMs,
+          screenshotInlineLimitBytes: serverArgs.screenshotInlineLimitBytes,
+          snapshotMaxNodes: serverArgs.snapshotMaxNodes,
+          consoleStackMaxFrames: serverArgs.consoleStackMaxFrames,
+          stackTraceTimeoutMs: serverArgs.stackTraceTimeoutMs,
+        },
       });
       await updateRoots();
     }
     return context;
   }
 
-  const toolMutex = new Mutex();
+  // Phase 1.6: apply console-stack tunable once at server creation. This is
+  // a module-level setter rather than per-call to keep ConsoleFormatter
+  // stateless from the caller's perspective.
+  if (serverArgs.consoleStackMaxFrames) {
+    setStackTraceMaxLines(serverArgs.consoleStackMaxFrames);
+  }
+
+  // Serializes context initialization and the page-resolution step so we can
+  // safely pick the per-page mutex without racing.
+  const contextInitMutex = new Mutex();
+  // Per-page (and one "global" slot for non-page-scoped tools) mutexes.
+  // Different pages no longer block each other.
+  const pageMutexes = new MutexMap<number | 'global'>();
+  const toolMutexTimeoutMs = serverArgs.toolMutexTimeoutMs ?? 0;
 
   function registerTool(tool: ToolDefinition | DefinedPageTool): void {
     const {disabled, reason: disabledReason} = getToolStatusInfo(
@@ -278,13 +306,42 @@ export async function createMcpServer(
           };
         }
 
-        const guard = await toolMutex.acquire();
+        // Phase 1.1: per-page mutex. We briefly hold the context-init mutex to
+        // resolve the page id, then transfer to a per-page mutex so unrelated
+        // pages can run in parallel. Non-page-scoped tools serialize on a
+        // shared 'global' slot.
+        const initGuard = await contextInitMutex.acquire({
+          timeoutMs: toolMutexTimeoutMs,
+          holderHint: `${tool.name}:init`,
+        });
+        let pageGuard: InstanceType<typeof Mutex.Guard> | undefined;
         const startTime = Date.now();
         let success = false;
         try {
           logger(`${tool.name} request: ${JSON.stringify(params, null, '  ')}`);
           const context = await getContext();
           logger(`${tool.name} context: resolved`);
+
+          let mutexKey: number | 'global' = 'global';
+          if ('pageScoped' in tool && tool.pageScoped) {
+            try {
+              const resolvedPage =
+                serverArgs.experimentalPageIdRouting && params.pageId
+                  ? context.getPageById(params.pageId)
+                  : context.getSelectedMcpPage();
+              mutexKey = resolvedPage.id;
+            } catch {
+              // Fall back to the global slot if page resolution fails here;
+              // the real error will resurface inside the handler below.
+            }
+          }
+          pageGuard = await pageMutexes.get(mutexKey).acquire({
+            timeoutMs: toolMutexTimeoutMs,
+            holderHint: `${tool.name}:page=${mutexKey}`,
+          });
+          // Release the init lock now that the per-page lock is held.
+          initGuard.dispose();
+
           await context.detectOpenDevToolsWindows();
           const response = serverArgs.slim
             ? new SlimMcpResponse(serverArgs)
@@ -367,7 +424,10 @@ export async function createMcpServer(
             success,
             latencyMs: bucketizeLatency(Date.now() - startTime),
           });
-          guard.dispose();
+          // Release whichever locks we still hold. initGuard is idempotent,
+          // so calling dispose twice is a no-op if it was already released.
+          initGuard.dispose();
+          pageGuard?.dispose();
         }
       },
     );

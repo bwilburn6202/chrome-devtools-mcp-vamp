@@ -467,13 +467,29 @@ export class McpResponse implements Response {
       if (!this.#page) {
         throw new Error('Response must have a page');
       }
-      this.#page.textSnapshot = await TextSnapshot.create(this.#page, {
-        verbose: this.#snapshotParams.verbose,
-        devtoolsData: this.#devToolsData,
-      });
+      const verbose = this.#snapshotParams.verbose ?? false;
+      const cached = this.#page.textSnapshot;
+      const cacheValid =
+        cached !== null &&
+        !this.#snapshotParams.forceRefresh &&
+        this.#page.snapshotComputedAtCounter ===
+          this.#page.snapshotMutationCounter &&
+        this.#page.snapshotComputedVerbose === verbose;
+      if (!cacheValid) {
+        this.#page.textSnapshot = await TextSnapshot.create(this.#page, {
+          verbose,
+          devtoolsData: this.#devToolsData,
+        });
+        this.#page.snapshotComputedAtCounter =
+          this.#page.snapshotMutationCounter;
+        this.#page.snapshotComputedVerbose = verbose;
+      }
       const textSnapshot = this.#page.textSnapshot;
       if (textSnapshot) {
-        const formatter = new SnapshotFormatter(textSnapshot);
+        // Phase 1.7: cap snapshot output size to avoid OOM on giant DOMs.
+        const formatter = new SnapshotFormatter(textSnapshot, {
+          maxNodes: context.getTuning().snapshotMaxNodes,
+        });
         if (this.#snapshotParams.filePath) {
           const result = await context.saveFile(
             new TextEncoder().encode(formatter.toString()),
