@@ -1086,7 +1086,7 @@ export const commands: Commands = {
   },
   lighthouse_audit: {
     description:
-      "Get Lighthouse score and reports. By default audits accessibility, SEO and best practices. Pass `categories` to include other audits — pass `['performance']` for the performance audit (or use performance_start_trace for trace-level analysis).",
+      "Get Lighthouse score and reports. By default audits accessibility, SEO, best practices, and agentic browsing. Pass `categories` to include other audits — pass `['performance']` for the performance audit (or use performance_start_trace for trace-level analysis).",
     category: 'Debugging',
     args: {
       mode: {
@@ -1116,7 +1116,7 @@ export const commands: Commands = {
         name: 'categories',
         type: 'array',
         description:
-          "Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices'].",
+          "Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices', 'agentic-browsing'].",
         required: false,
       },
     },

@@ -1,6 +1,6 @@
 <!-- AUTO GENERATED DO NOT EDIT - run 'npm run gen' to update-->
 
-# Chrome DevTools MCP Tool Reference (~17987 cl100k_base tokens)
+# Chrome DevTools MCP Tool Reference (~18005 cl100k_base tokens)
 
 - **[Input automation](#input-automation)** (10 tools)
   - [`click`](#click)
@@ -538,11 +538,11 @@ so returned values have to be JSON-serializable.
 
 ### `lighthouse_audit`
 
-**Description:** Get Lighthouse score and reports. By default audits accessibility, SEO and best practices. Pass `categories` to include other audits — pass `['performance']` for the performance audit (or use [`performance_start_trace`](#performance_start_trace) for trace-level analysis).
+**Description:** Get Lighthouse score and reports. By default audits accessibility, SEO, best practices, and agentic browsing. Pass `categories` to include other audits — pass `['performance']` for the performance audit (or use [`performance_start_trace`](#performance_start_trace) for trace-level analysis).
 
 **Parameters:**
 
-- **categories** (array) _(optional)_: Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices'].
+- **categories** (array) _(optional)_: Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices', 'agentic-browsing'].
 - **device** (enum: "desktop", "mobile") _(optional)_: Device to [`emulate`](#emulate).
 - **mode** (enum: "navigation", "snapshot") _(optional)_: "navigation" reloads &amp; audits. "snapshot" analyzes current state.
 - **outputDirPath** (string) _(optional)_: Directory for reports. If omitted, uses temporary files.

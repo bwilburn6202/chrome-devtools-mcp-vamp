@@ -14,6 +14,7 @@ import {
   type Flags,
   type RunnerResult,
   type OutputMode,
+  agenticBrowsingConfig,
 } from '../third_party/index.js';
 
 import {ToolCategory} from './categories.js';
@@ -22,7 +23,7 @@ import {definePageTool} from './ToolDefinition.js';
 
 export const lighthouseAudit = definePageTool({
   name: 'lighthouse_audit',
-  description: `Get Lighthouse score and reports. By default audits accessibility, SEO and best practices. Pass \`categories\` to include other audits — pass \`['performance']\` for the performance audit (or use ${startTrace.name} for trace-level analysis).`,
+  description: `Get Lighthouse score and reports. By default audits accessibility, SEO, best practices, and agentic browsing. Pass \`categories\` to include other audits — pass \`['performance']\` for the performance audit (or use ${startTrace.name} for trace-level analysis).`,
   annotations: {
     category: ToolCategory.DEBUGGING,
     readOnlyHint: false,
@@ -49,13 +50,14 @@ export const lighthouseAudit = definePageTool({
           'accessibility',
           'seo',
           'best-practices',
+          'agentic-browsing',
           'performance',
           'pwa',
         ]),
       )
       .optional()
       .describe(
-        "Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices'].",
+        "Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices', 'agentic-browsing'].",
       ),
   },
   blockedByDialog: true,
@@ -65,6 +67,7 @@ export const lighthouseAudit = definePageTool({
       'accessibility',
       'seo',
       'best-practices',
+      'agentic-browsing',
     ];
     const formats = ['json', 'html'] as OutputMode[];
     const {
@@ -102,16 +105,17 @@ export const lighthouseAudit = definePageTool({
       };
     }
 
+    const options: {flags: Flags; config?: object} = {
+      flags,
+      config: agenticBrowsingConfig,
+    };
+
     let result: RunnerResult | undefined;
     try {
       if (mode === 'navigation') {
-        result = await navigation(page.pptrPage, page.pptrPage.url(), {
-          flags,
-        });
+        result = await navigation(page.pptrPage, page.pptrPage.url(), options);
       } else {
-        result = await snapshot(page.pptrPage, {
-          flags,
-        });
+        result = await snapshot(page.pptrPage, options);
       }
 
       if (!result) {
