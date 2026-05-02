@@ -1,8 +1,8 @@
 <!-- AUTO GENERATED DO NOT EDIT - run 'npm run gen' to update-->
 
-# Chrome DevTools MCP Tool Reference (~13997 cl100k_base tokens)
+# Chrome DevTools MCP Tool Reference (~17987 cl100k_base tokens)
 
-- **[Input automation](#input-automation)** (9 tools)
+- **[Input automation](#input-automation)** (10 tools)
   - [`click`](#click)
   - [`drag`](#drag)
   - [`fill`](#fill)
@@ -10,17 +10,26 @@
   - [`handle_dialog`](#handle_dialog)
   - [`hover`](#hover)
   - [`press_key`](#press_key)
+  - [`scroll_into_view`](#scroll_into_view)
   - [`type_text`](#type_text)
   - [`upload_file`](#upload_file)
-- **[Navigation automation](#navigation-automation)** (6 tools)
+- **[Navigation automation](#navigation-automation)** (7 tools)
+  - [`broadcast_evaluate`](#broadcast_evaluate)
   - [`close_page`](#close_page)
   - [`list_pages`](#list_pages)
   - [`navigate_page`](#navigate_page)
   - [`new_page`](#new_page)
   - [`select_page`](#select_page)
   - [`wait_for`](#wait_for)
-- **[Emulation](#emulation)** (2 tools)
+- **[Emulation](#emulation)** (9 tools)
+  - [`clear_idle_state_override`](#clear_idle_state_override)
   - [`emulate`](#emulate)
+  - [`emulate_idle_state`](#emulate_idle_state)
+  - [`emulate_reduced_motion`](#emulate_reduced_motion)
+  - [`emulate_sensor`](#emulate_sensor)
+  - [`emulate_vision_deficiency`](#emulate_vision_deficiency)
+  - [`override_permissions`](#override_permissions)
+  - [`reset_permissions`](#reset_permissions)
   - [`resize_page`](#resize_page)
 - **[Performance](#performance)** (3 tools)
   - [`performance_analyze_insight`](#performance_analyze_insight)
@@ -29,11 +38,15 @@
 - **[Network](#network)** (2 tools)
   - [`get_network_request`](#get_network_request)
   - [`list_network_requests`](#list_network_requests)
-- **[Debugging](#debugging)** (6 tools)
+- **[Debugging](#debugging)** (10 tools)
   - [`evaluate_script`](#evaluate_script)
+  - [`get_box_model`](#get_box_model)
+  - [`get_computed_styles`](#get_computed_styles)
   - [`get_console_message`](#get_console_message)
+  - [`get_layout_metrics`](#get_layout_metrics)
   - [`lighthouse_audit`](#lighthouse_audit)
   - [`list_console_messages`](#list_console_messages)
+  - [`query_selector_all`](#query_selector_all)
   - [`take_screenshot`](#take_screenshot)
   - [`take_snapshot`](#take_snapshot)
 - **[Extensions](#extensions)** (5 tools)
@@ -85,6 +98,15 @@
   - [`trigger_background_sync`](#trigger_background_sync)
   - [`unregister_service_worker`](#unregister_service_worker)
   - [`update_service_worker`](#update_service_worker)
+- **[Code coverage](#code-coverage)** (4 tools)
+  - [`start_css_coverage`](#start_css_coverage)
+  - [`start_js_coverage`](#start_js_coverage)
+  - [`stop_css_coverage`](#stop_css_coverage)
+  - [`stop_js_coverage`](#stop_js_coverage)
+- **[Page export](#page-export)** (3 tools)
+  - [`export_dom_html`](#export_dom_html)
+  - [`print_to_pdf`](#print_to_pdf)
+  - [`save_mhtml`](#save_mhtml)
 
 ## Input automation
 
@@ -168,6 +190,18 @@
 
 ---
 
+### `scroll_into_view`
+
+**Description:** Scrolls the element identified by uid into the viewport.
+
+**Parameters:**
+
+- **uid** (string) **(required)**
+- **block** (enum: "start", "center", "end", "nearest") _(optional)_
+- **inline** (enum: "start", "center", "end", "nearest") _(optional)_
+
+---
+
 ### `type_text`
 
 **Description:** Type text using keyboard into a previously focused input
@@ -192,6 +226,18 @@
 ---
 
 ## Navigation automation
+
+### `broadcast_evaluate`
+
+**Description:** Run the same JavaScript expression in every open page (or a filtered subset) and aggregate the results. Useful for cross-tab queries (e.g. "find all pages where the user is logged in").
+
+**Parameters:**
+
+- **expression** (string) **(required)**
+- **pageIds** (array) _(optional)_: Restrict broadcast to these page ids. Default: every open page.
+- **timeoutMs** (integer) _(optional)_: Per-page timeout. Default 5000.
+
+---
 
 ### `close_page`
 
@@ -263,6 +309,14 @@
 
 ## Emulation
 
+### `clear_idle_state_override`
+
+**Description:** Clear the IdleDetector override.
+
+**Parameters:** None
+
+---
+
 ### `emulate`
 
 **Description:** Emulates various features on the selected page.
@@ -275,6 +329,74 @@
 - **networkConditions** (enum: "Offline", "Slow 3G", "Fast 3G", "Slow 4G", "Fast 4G") _(optional)_: Throttle network. Omit to disable throttling.
 - **userAgent** (string) _(optional)_: User agent to [`emulate`](#emulate). Set to empty string to clear the user agent override.
 - **viewport** (string) _(optional)_: [`Emulate`](#emulate) device viewports '&lt;width&gt;x&lt;height&gt;x&lt;devicePixelRatio&gt;[,mobile][,touch][,landscape]'. 'touch' and 'mobile' to [`emulate`](#emulate) mobile devices. 'landscape' to [`emulate`](#emulate) landscape mode.
+
+---
+
+### `emulate_idle_state`
+
+**Description:** Override the IdleDetector state (CDP `Emulation.setIdleOverride`).
+
+**Parameters:**
+
+- **isScreenUnlocked** (boolean) **(required)**
+- **isUserActive** (boolean) **(required)**
+
+---
+
+### `emulate_reduced_motion`
+
+**Description:** [`Emulate`](#emulate) `prefers-reduced-motion: reduce` via media-feature override.
+
+**Parameters:**
+
+- **enabled** (boolean) **(required)**
+
+---
+
+### `emulate_sensor`
+
+**Description:** Override readings for a Web Sensor API sensor (CDP `Emulation.setSensorOverrideEnabled` + `setSensorOverrideReadings`).
+
+**Parameters:**
+
+- **type** (enum: "absolute-orientation", "accelerometer", "ambient-light", "gravity", "gyroscope", "linear-acceleration", "magnetometer", "proximity", "relative-orientation") **(required)**
+- **alpha** (number) _(optional)_: For orientation sensors (degrees).
+- **beta** (number) _(optional)_
+- **enabled** (boolean) _(optional)_: Default true. Pass false to disable the override.
+- **gamma** (number) _(optional)_
+- **illuminance** (number) _(optional)_: Lux, for ambient-light.
+- **x** (number) _(optional)_
+- **y** (number) _(optional)_
+- **z** (number) _(optional)_
+
+---
+
+### `emulate_vision_deficiency`
+
+**Description:** [`Emulate`](#emulate) a CSS vision deficiency for accessibility testing (CDP `Emulation.setEmulatedVisionDeficiency`).
+
+**Parameters:**
+
+- **type** (enum: "none", "achromatopsia", "blurredVision", "deuteranopia", "protanopia", "tritanopia", "reducedContrast") **(required)**
+
+---
+
+### `override_permissions`
+
+**Description:** Grants the listed permissions for the active page's origin. Until reset, the browser auto-grants these without prompting.
+
+**Parameters:**
+
+- **permissions** (array) **(required)**: Permissions to grant.
+- **origin** (string) _(optional)_: Origin to grant for. Default: current page origin.
+
+---
+
+### `reset_permissions`
+
+**Description:** Clears any permission overrides for the current browser context, restoring default prompt behavior.
+
+**Parameters:** None
 
 ---
 
@@ -375,6 +497,27 @@ so returned values have to be JSON-serializable.
 
 ---
 
+### `get_box_model`
+
+**Description:** Returns the box model (content/padding/border/margin quads, plus width/height) for an element by uid.
+
+**Parameters:**
+
+- **uid** (string) **(required)**
+
+---
+
+### `get_computed_styles`
+
+**Description:** Returns a subset of `getComputedStyle` for an element identified by uid. Filter to a property list to avoid the full dump.
+
+**Parameters:**
+
+- **uid** (string) **(required)**
+- **properties** (array) _(optional)_: Property names to return (e.g. ["display", "color"]). If omitted, returns the full computed style object — large.
+
+---
+
 ### `get_console_message`
 
 **Description:** Gets a console message by its ID. You can get all messages by calling [`list_console_messages`](#list_console_messages).
@@ -385,12 +528,21 @@ so returned values have to be JSON-serializable.
 
 ---
 
+### `get_layout_metrics`
+
+**Description:** Returns viewport, content, and visual viewport metrics for the active page (CDP `Page.getLayoutMetrics`).
+
+**Parameters:** None
+
+---
+
 ### `lighthouse_audit`
 
-**Description:** Get Lighthouse score and reports for accessibility, SEO and best practices. This excludes performance. For performance audits, run [`performance_start_trace`](#performance_start_trace)
+**Description:** Get Lighthouse score and reports. By default audits accessibility, SEO and best practices. Pass `categories` to include other audits — pass `['performance']` for the performance audit (or use [`performance_start_trace`](#performance_start_trace) for trace-level analysis).
 
 **Parameters:**
 
+- **categories** (array) _(optional)_: Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices'].
 - **device** (enum: "desktop", "mobile") _(optional)_: Device to [`emulate`](#emulate).
 - **mode** (enum: "navigation", "snapshot") _(optional)_: "navigation" reloads &amp; audits. "snapshot" analyzes current state.
 - **outputDirPath** (string) _(optional)_: Directory for reports. If omitted, uses temporary files.
@@ -407,6 +559,17 @@ so returned values have to be JSON-serializable.
 - **pageIdx** (integer) _(optional)_: Page number to return (0-based). When omitted, returns the first page.
 - **pageSize** (integer) _(optional)_: Maximum number of messages to return. When omitted, returns all messages.
 - **types** (array) _(optional)_: Filter messages to only return messages of the specified resource types. When omitted or empty, returns all messages.
+
+---
+
+### `query_selector_all`
+
+**Description:** Returns matches for a CSS selector on the active page. Each match includes the snapshot uid (if the element is part of the current a11y snapshot), tagName, and a brief text excerpt. Useful for narrowing element targets before `[`click`](#click)` / `[`fill`](#fill)`.
+
+**Parameters:**
+
+- **selector** (string) **(required)**: CSS selector.
+- **limit** (integer) _(optional)_: Default 50.
 
 ---
 
@@ -929,5 +1092,94 @@ The script is run as an expression. Use `[`evaluate_script`](#evaluate_script)` 
 **Parameters:**
 
 - **scopeURL** (string) **(required)**
+
+---
+
+## Code coverage
+
+### `start_css_coverage`
+
+**Description:** Start collecting CSS coverage on the active page.
+
+**Parameters:**
+
+- **resetOnNavigation** (boolean) _(optional)_
+
+---
+
+### `start_js_coverage`
+
+**Description:** Start collecting JavaScript code coverage on the active page. Stop with `[`stop_js_coverage`](#stop_js_coverage)` to retrieve the report.
+
+**Parameters:**
+
+- **detailed** (boolean) _(optional)_: When true, collect detailed coverage (every byte). When false, only function-level granularity. Default true.
+- **reportAnonymousScripts** (boolean) _(optional)_: Include anonymous scripts (e.g. eval). Default false.
+- **resetOnNavigation** (boolean) _(optional)_: Reset coverage on navigation. Default true.
+
+---
+
+### `stop_css_coverage`
+
+**Description:** Stop CSS coverage and return the report.
+
+**Parameters:**
+
+- **filePath** (string) _(optional)_
+- **summaryOnly** (boolean) _(optional)_
+
+---
+
+### `stop_js_coverage`
+
+**Description:** Stop JS coverage and return the report. If `filePath` is set, the JSON is written to disk; otherwise the report is returned inline.
+
+**Parameters:**
+
+- **filePath** (string) _(optional)_
+- **summaryOnly** (boolean) _(optional)_: Return only per-URL byte usage totals instead of full ranges. Default false.
+
+---
+
+## Page export
+
+### `export_dom_html`
+
+**Description:** Save the active page's serialized DOM (document.documentElement.outerHTML).
+
+**Parameters:**
+
+- **filePath** (string) _(optional)_
+
+---
+
+### `print_to_pdf`
+
+**Description:** Export the active page as a PDF (CDP `Page.printToPDF`). Returns the saved file path.
+
+**Parameters:**
+
+- **filePath** (string) _(optional)_: Output path. Defaults to a temp file.
+- **footerTemplate** (string) _(optional)_
+- **headerTemplate** (string) _(optional)_: HTML for header. Use classes `date title url pageNumber totalPages`.
+- **height** (string) _(optional)_
+- **landscape** (boolean) _(optional)_
+- **marginBottom** (string) _(optional)_
+- **marginLeft** (string) _(optional)_
+- **marginRight** (string) _(optional)_
+- **marginTop** (string) _(optional)_
+- **pageRanges** (string) _(optional)_: e.g. "1-3,5". Default: all pages.
+- **paperFormat** (enum: "letter", "legal", "tabloid", "ledger", "a0", "a1", "a2", "a3", "a4", "a5", "a6") _(optional)_: Standard paper size. Mutually exclusive with width/height.
+- **printBackground** (boolean) _(optional)_: Include background colors / images. Default true.
+- **scale** (number) _(optional)_
+- **width** (string) _(optional)_: e.g. "8.5in", "210mm".
+
+---
+
+### `save_mhtml`
+
+**Description:** Save the active page as an MHTML archive (CDP `Page.captureSnapshot` with format `mhtml`).
+
+**Parameters:** None
 
 ---

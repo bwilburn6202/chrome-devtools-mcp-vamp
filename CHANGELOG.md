@@ -1,5 +1,66 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 6 (partial): coverage, sensors/permissions, exports, DOM extras, multi-tab, lighthouse perf
+
+Phase 6 is the kitchen-sink phase from the original review. Ships the
+tools that are independently useful and have small, well-defined surfaces;
+defers the heavier subsystems (full debugger, axe-core integration, real
+Issues panel replacing FakeIssuesManager, recorder/replay, local
+overrides) for follow-up since each is its own substantial feature.
+
+### Coverage (new `COVERAGE` category, on by default)
+
+- `start_js_coverage`, `stop_js_coverage` (with `summaryOnly` for compact
+  per-URL byte usage), `start_css_coverage`, `stop_css_coverage`.
+
+### Sensors / permissions / accessibility (extends existing EMULATION)
+
+- `override_permissions({permissions[], origin?})`, `reset_permissions`.
+- `emulate_sensor({type, x?, y?, z?, alpha?, beta?, gamma?, illuminance?})`.
+- `emulate_idle_state`, `clear_idle_state_override`.
+- `emulate_vision_deficiency({type})` — achromatopsia, deuteranopia,
+  tritanopia, blurredVision, reducedContrast, etc.
+- `emulate_reduced_motion({enabled})`.
+
+### Page export (new `EXPORT` category, on by default)
+
+- `print_to_pdf` — full CDP `Page.printToPDF` surface (paper formats,
+  margins, header/footer templates, page ranges, scale).
+- `save_mhtml` — CDP `Page.captureSnapshot`.
+- `export_dom_html` — serialized `documentElement.outerHTML`.
+
+### DOM / layout extras (lives in DEBUGGING / INPUT)
+
+- `query_selector_all({selector, limit?})`.
+- `get_computed_styles({uid, properties?})`.
+- `get_box_model({uid})`, `scroll_into_view({uid, block?, inline?})`,
+  `get_layout_metrics`.
+
+### Multi-tab coordination
+
+- `broadcast_evaluate({expression, pageIds?, timeoutMs?})` — fans out the
+  same expression across every open page (or a filtered subset) with
+  per-page timeout.
+
+### Lighthouse performance opt-in
+
+- `lighthouse_audit` now accepts `categories: string[]` (default
+  `['accessibility', 'seo', 'best-practices']`). Pass `['performance']`
+  to enable the performance audit.
+
+### Deferred to Phase 7
+
+- Full debugger surface (breakpoints, stepping, scope inspection).
+- axe-core a11y audits.
+- Real `list_issues` (replacing `FakeIssuesManager`).
+- Recorder / replay.
+- Local overrides (file-backed response substitution).
+
+### New CLI flags
+
+`--categoryCoverage`, `--categoryExport`. Both default true with
+corresponding `--no-` opt-outs.
+
 ## Unreleased — vamp fork, Phase 5: service worker / PWA tools
 
 Adds the on-by-default `SERVICE_WORKER` tool category with 9 tools that

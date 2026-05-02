@@ -477,7 +477,7 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
 
 <!-- BEGIN AUTO GENERATED TOOLS -->
 
-- **Input automation** (9 tools)
+- **Input automation** (10 tools)
   - [`click`](docs/tool-reference.md#click)
   - [`drag`](docs/tool-reference.md#drag)
   - [`fill`](docs/tool-reference.md#fill)
@@ -485,17 +485,26 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
   - [`handle_dialog`](docs/tool-reference.md#handle_dialog)
   - [`hover`](docs/tool-reference.md#hover)
   - [`press_key`](docs/tool-reference.md#press_key)
+  - [`scroll_into_view`](docs/tool-reference.md#scroll_into_view)
   - [`type_text`](docs/tool-reference.md#type_text)
   - [`upload_file`](docs/tool-reference.md#upload_file)
-- **Navigation automation** (6 tools)
+- **Navigation automation** (7 tools)
+  - [`broadcast_evaluate`](docs/tool-reference.md#broadcast_evaluate)
   - [`close_page`](docs/tool-reference.md#close_page)
   - [`list_pages`](docs/tool-reference.md#list_pages)
   - [`navigate_page`](docs/tool-reference.md#navigate_page)
   - [`new_page`](docs/tool-reference.md#new_page)
   - [`select_page`](docs/tool-reference.md#select_page)
   - [`wait_for`](docs/tool-reference.md#wait_for)
-- **Emulation** (2 tools)
+- **Emulation** (9 tools)
+  - [`clear_idle_state_override`](docs/tool-reference.md#clear_idle_state_override)
   - [`emulate`](docs/tool-reference.md#emulate)
+  - [`emulate_idle_state`](docs/tool-reference.md#emulate_idle_state)
+  - [`emulate_reduced_motion`](docs/tool-reference.md#emulate_reduced_motion)
+  - [`emulate_sensor`](docs/tool-reference.md#emulate_sensor)
+  - [`emulate_vision_deficiency`](docs/tool-reference.md#emulate_vision_deficiency)
+  - [`override_permissions`](docs/tool-reference.md#override_permissions)
+  - [`reset_permissions`](docs/tool-reference.md#reset_permissions)
   - [`resize_page`](docs/tool-reference.md#resize_page)
 - **Performance** (3 tools)
   - [`performance_analyze_insight`](docs/tool-reference.md#performance_analyze_insight)
@@ -504,11 +513,15 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
 - **Network** (2 tools)
   - [`get_network_request`](docs/tool-reference.md#get_network_request)
   - [`list_network_requests`](docs/tool-reference.md#list_network_requests)
-- **Debugging** (6 tools)
+- **Debugging** (10 tools)
   - [`evaluate_script`](docs/tool-reference.md#evaluate_script)
+  - [`get_box_model`](docs/tool-reference.md#get_box_model)
+  - [`get_computed_styles`](docs/tool-reference.md#get_computed_styles)
   - [`get_console_message`](docs/tool-reference.md#get_console_message)
+  - [`get_layout_metrics`](docs/tool-reference.md#get_layout_metrics)
   - [`lighthouse_audit`](docs/tool-reference.md#lighthouse_audit)
   - [`list_console_messages`](docs/tool-reference.md#list_console_messages)
+  - [`query_selector_all`](docs/tool-reference.md#query_selector_all)
   - [`take_screenshot`](docs/tool-reference.md#take_screenshot)
   - [`take_snapshot`](docs/tool-reference.md#take_snapshot)
 - **Extensions** (5 tools)
@@ -560,6 +573,15 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
   - [`trigger_background_sync`](docs/tool-reference.md#trigger_background_sync)
   - [`unregister_service_worker`](docs/tool-reference.md#unregister_service_worker)
   - [`update_service_worker`](docs/tool-reference.md#update_service_worker)
+- **Code coverage** (4 tools)
+  - [`start_css_coverage`](docs/tool-reference.md#start_css_coverage)
+  - [`start_js_coverage`](docs/tool-reference.md#start_js_coverage)
+  - [`stop_css_coverage`](docs/tool-reference.md#stop_css_coverage)
+  - [`stop_js_coverage`](docs/tool-reference.md#stop_js_coverage)
+- **Page export** (3 tools)
+  - [`export_dom_html`](docs/tool-reference.md#export_dom_html)
+  - [`print_to_pdf`](docs/tool-reference.md#print_to_pdf)
+  - [`save_mhtml`](docs/tool-reference.md#save_mhtml)
 
 <!-- END AUTO GENERATED TOOLS -->
 
@@ -680,6 +702,16 @@ The Chrome DevTools MCP server supports the following configuration option:
 
 - **`--categoryServiceWorker`/ `--category-service-worker`**
   Set to false to disable service worker / PWA tools (list_service_workers, evaluate_in_worker, unregister_service_worker, update_service_worker, skip_waiting, get_manifest, trigger_background_sync). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryCoverage`/ `--category-coverage`**
+  Set to false to disable JS/CSS coverage tools (start_js_coverage, stop_js_coverage, start_css_coverage, stop_css_coverage). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryExport`/ `--category-export`**
+  Set to false to disable page export tools (print_to_pdf, save_mhtml, export_dom_html). Default true.
   - **Type:** boolean
   - **Default:** `true`
 

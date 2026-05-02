@@ -20,6 +20,10 @@ export enum ToolCategory {
   INTERCEPTION = 'interception',
   // Phase 5: service workers and PWA-related capabilities.
   SERVICE_WORKER = 'serviceWorker',
+  // Phase 6: JS/CSS coverage profiling (Puppeteer page.coverage).
+  COVERAGE = 'coverage',
+  // Phase 6: PDF / MHTML / HTML export tools.
+  EXPORT = 'export',
 }
 
 export const labels = {
@@ -35,6 +39,8 @@ export const labels = {
   [ToolCategory.STORAGE]: 'Storage',
   [ToolCategory.INTERCEPTION]: 'Network interception',
   [ToolCategory.SERVICE_WORKER]: 'Service workers / PWA',
+  [ToolCategory.COVERAGE]: 'Code coverage',
+  [ToolCategory.EXPORT]: 'Page export',
 };
 
 export const OFF_BY_DEFAULT_CATEGORIES = [

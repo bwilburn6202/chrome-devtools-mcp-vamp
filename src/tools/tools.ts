@@ -8,7 +8,10 @@ import type {ParsedArguments} from '../bin/chrome-devtools-mcp-cli-options.js';
 
 import * as cdpTools from './cdp.js';
 import * as consoleTools from './console.js';
+import * as coverageTools from './coverage.js';
+import * as domExtraTools from './domExtras.js';
 import * as emulationTools from './emulation.js';
+import * as exportTools from './exportTools.js';
 import * as extensionTools from './extensions.js';
 import * as inPageTools from './inPage.js';
 import * as inputTools from './input.js';
@@ -21,6 +24,7 @@ import * as performanceTools from './performance.js';
 import * as screencastTools from './screencast.js';
 import * as screenshotTools from './screenshot.js';
 import * as scriptTools from './script.js';
+import * as sensorsPermissionsTools from './sensorsPermissions.js';
 import * as serviceWorkerTools from './serviceWorker.js';
 import * as slimTools from './slim/tools.js';
 import * as snapshotTools from './snapshot.js';
@@ -34,7 +38,10 @@ export const createTools = (args: ParsedArguments) => {
     : [
         ...Object.values(cdpTools),
         ...Object.values(consoleTools),
+        ...Object.values(coverageTools),
+        ...Object.values(domExtraTools),
         ...Object.values(emulationTools),
+        ...Object.values(exportTools),
         ...Object.values(extensionTools),
         ...Object.values(inPageTools),
         ...Object.values(inputTools),
@@ -47,6 +54,7 @@ export const createTools = (args: ParsedArguments) => {
         ...Object.values(screencastTools),
         ...Object.values(screenshotTools),
         ...Object.values(scriptTools),
+        ...Object.values(sensorsPermissionsTools),
         ...Object.values(serviceWorkerTools),
         ...Object.values(snapshotTools),
         ...Object.values(storageTools),

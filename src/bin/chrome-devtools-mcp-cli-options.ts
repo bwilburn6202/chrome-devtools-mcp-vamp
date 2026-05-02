@@ -276,6 +276,18 @@ export const cliOptions = {
     describe:
       'Set to false to disable service worker / PWA tools (list_service_workers, evaluate_in_worker, unregister_service_worker, update_service_worker, skip_waiting, get_manifest, trigger_background_sync). Default true.',
   },
+  categoryCoverage: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable JS/CSS coverage tools (start_js_coverage, stop_js_coverage, start_css_coverage, stop_css_coverage). Default true.',
+  },
+  categoryExport: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable page export tools (print_to_pdf, save_mhtml, export_dom_html). Default true.',
+  },
   performanceCrux: {
     type: 'boolean',
     default: true,

@@ -42,6 +42,32 @@ export const commands: Commands = {
       },
     },
   },
+  broadcast_evaluate: {
+    description:
+      'Run the same JavaScript expression in every open page (or a filtered subset) and aggregate the results. Useful for cross-tab queries (e.g. "find all pages where the user is logged in").',
+    category: 'Navigation automation',
+    args: {
+      expression: {
+        name: 'expression',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      pageIds: {
+        name: 'pageIds',
+        type: 'array',
+        description:
+          'Restrict broadcast to these page ids. Default: every open page.',
+        required: false,
+      },
+      timeoutMs: {
+        name: 'timeoutMs',
+        type: 'integer',
+        description: 'Per-page timeout. Default 5000.',
+        required: false,
+      },
+    },
+  },
   cdp_list_subscriptions: {
     description:
       'List active CDP event subscriptions. (requires flag: --experimentalCdpPassthrough=true)',
@@ -153,6 +179,11 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  clear_idle_state_override: {
+    description: 'Clear the IdleDetector override.',
+    category: 'Emulation',
+    args: {},
   },
   clear_indexeddb_object_store: {
     description: 'Clears all entries from an IndexedDB object store.',
@@ -435,6 +466,132 @@ export const commands: Commands = {
       },
     },
   },
+  emulate_idle_state: {
+    description:
+      'Override the IdleDetector state (CDP `Emulation.setIdleOverride`).',
+    category: 'Emulation',
+    args: {
+      isUserActive: {
+        name: 'isUserActive',
+        type: 'boolean',
+        description: '',
+        required: true,
+      },
+      isScreenUnlocked: {
+        name: 'isScreenUnlocked',
+        type: 'boolean',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  emulate_reduced_motion: {
+    description:
+      'Emulate `prefers-reduced-motion: reduce` via media-feature override.',
+    category: 'Emulation',
+    args: {
+      enabled: {
+        name: 'enabled',
+        type: 'boolean',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  emulate_sensor: {
+    description:
+      'Override readings for a Web Sensor API sensor (CDP `Emulation.setSensorOverrideEnabled` + `setSensorOverrideReadings`).',
+    category: 'Emulation',
+    args: {
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: [
+          'absolute-orientation',
+          'accelerometer',
+          'ambient-light',
+          'gravity',
+          'gyroscope',
+          'linear-acceleration',
+          'magnetometer',
+          'proximity',
+          'relative-orientation',
+        ],
+      },
+      enabled: {
+        name: 'enabled',
+        type: 'boolean',
+        description: 'Default true. Pass false to disable the override.',
+        required: false,
+      },
+      x: {
+        name: 'x',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      y: {
+        name: 'y',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      z: {
+        name: 'z',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      alpha: {
+        name: 'alpha',
+        type: 'number',
+        description: 'For orientation sensors (degrees).',
+        required: false,
+      },
+      beta: {
+        name: 'beta',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      gamma: {
+        name: 'gamma',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      illuminance: {
+        name: 'illuminance',
+        type: 'number',
+        description: 'Lux, for ambient-light.',
+        required: false,
+      },
+    },
+  },
+  emulate_vision_deficiency: {
+    description:
+      'Emulate a CSS vision deficiency for accessibility testing (CDP `Emulation.setEmulatedVisionDeficiency`).',
+    category: 'Emulation',
+    args: {
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: [
+          'none',
+          'achromatopsia',
+          'blurredVision',
+          'deuteranopia',
+          'protanopia',
+          'tritanopia',
+          'reducedContrast',
+        ],
+      },
+    },
+  },
   evaluate_in_worker: {
     description:
       'Evaluates a JavaScript expression inside a service worker. The worker is identified by a substring of its URL (e.g. "sw.js" or "/service-worker.js").\n\nThe script is run as an expression. Use `evaluate_script` for page contexts; this tool exists for SW debugging (`caches.keys()`, `self.registration.update()`, etc.).',
@@ -503,6 +660,19 @@ export const commands: Commands = {
       },
     },
   },
+  export_dom_html: {
+    description:
+      "Save the active page's serialized DOM (document.documentElement.outerHTML).",
+    category: 'Page export',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   fill: {
     description:
       'Type text into an input, text area or select an option from a <select> element.',
@@ -527,6 +697,19 @@ export const commands: Commands = {
         description:
           'Whether to include a snapshot in the response. Default is false.',
         required: false,
+      },
+    },
+  },
+  get_box_model: {
+    description:
+      'Returns the box model (content/padding/border/margin quads, plus width/height) for an element by uid.',
+    category: 'Debugging',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
       },
     },
   },
@@ -557,6 +740,26 @@ export const commands: Commands = {
         name: 'pathFilter',
         type: 'string',
         description: 'Optional substring filter on request URL path.',
+        required: false,
+      },
+    },
+  },
+  get_computed_styles: {
+    description:
+      'Returns a subset of `getComputedStyle` for an element identified by uid. Filter to a property list to avoid the full dump.',
+    category: 'Debugging',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      properties: {
+        name: 'properties',
+        type: 'array',
+        description:
+          'Property names to return (e.g. ["display", "color"]). If omitted, returns the full computed style object — large.',
         required: false,
       },
     },
@@ -618,6 +821,12 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  get_layout_metrics: {
+    description:
+      'Returns viewport, content, and visual viewport metrics for the active page (CDP `Page.getLayoutMetrics`).',
+    category: 'Debugging',
+    args: {},
   },
   get_local_storage: {
     description:
@@ -877,7 +1086,7 @@ export const commands: Commands = {
   },
   lighthouse_audit: {
     description:
-      'Get Lighthouse score and reports for accessibility, SEO and best practices. This excludes performance. For performance audits, run performance_start_trace',
+      "Get Lighthouse score and reports. By default audits accessibility, SEO and best practices. Pass `categories` to include other audits — pass `['performance']` for the performance audit (or use performance_start_trace for trace-level analysis).",
     category: 'Debugging',
     args: {
       mode: {
@@ -901,6 +1110,13 @@ export const commands: Commands = {
         name: 'outputDirPath',
         type: 'string',
         description: 'Directory for reports. If omitted, uses temporary files.',
+        required: false,
+      },
+      categories: {
+        name: 'categories',
+        type: 'array',
+        description:
+          "Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices'].",
         required: false,
       },
     },
@@ -1212,6 +1428,25 @@ export const commands: Commands = {
       },
     },
   },
+  override_permissions: {
+    description:
+      "Grants the listed permissions for the active page's origin. Until reset, the browser auto-grants these without prompting.",
+    category: 'Emulation',
+    args: {
+      permissions: {
+        name: 'permissions',
+        type: 'array',
+        description: 'Permissions to grant.',
+        required: true,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: 'Origin to grant for. Default: current page origin.',
+        required: false,
+      },
+    },
+  },
   performance_analyze_insight: {
     description:
       'Provides more detailed information on a specific Performance Insight of an insight set that was highlighted in the results of a trace recording.',
@@ -1298,6 +1533,131 @@ export const commands: Commands = {
       },
     },
   },
+  print_to_pdf: {
+    description:
+      'Export the active page as a PDF (CDP `Page.printToPDF`). Returns the saved file path.',
+    category: 'Page export',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: 'Output path. Defaults to a temp file.',
+        required: false,
+      },
+      landscape: {
+        name: 'landscape',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+      printBackground: {
+        name: 'printBackground',
+        type: 'boolean',
+        description: 'Include background colors / images. Default true.',
+        required: false,
+      },
+      paperFormat: {
+        name: 'paperFormat',
+        type: 'string',
+        description:
+          'Standard paper size. Mutually exclusive with width/height.',
+        required: false,
+        enum: [
+          'letter',
+          'legal',
+          'tabloid',
+          'ledger',
+          'a0',
+          'a1',
+          'a2',
+          'a3',
+          'a4',
+          'a5',
+          'a6',
+        ],
+      },
+      width: {
+        name: 'width',
+        type: 'string',
+        description: 'e.g. "8.5in", "210mm".',
+        required: false,
+      },
+      height: {
+        name: 'height',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginTop: {
+        name: 'marginTop',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginRight: {
+        name: 'marginRight',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginBottom: {
+        name: 'marginBottom',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginLeft: {
+        name: 'marginLeft',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      scale: {
+        name: 'scale',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      pageRanges: {
+        name: 'pageRanges',
+        type: 'string',
+        description: 'e.g. "1-3,5". Default: all pages.',
+        required: false,
+      },
+      headerTemplate: {
+        name: 'headerTemplate',
+        type: 'string',
+        description:
+          'HTML for header. Use classes `date title url pageNumber totalPages`.',
+        required: false,
+      },
+      footerTemplate: {
+        name: 'footerTemplate',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  query_selector_all: {
+    description:
+      'Returns matches for a CSS selector on the active page. Each match includes the snapshot uid (if the element is part of the current a11y snapshot), tagName, and a brief text excerpt. Useful for narrowing element targets before `click` / `fill`.',
+    category: 'Debugging',
+    args: {
+      selector: {
+        name: 'selector',
+        type: 'string',
+        description: 'CSS selector.',
+        required: true,
+      },
+      limit: {
+        name: 'limit',
+        type: 'integer',
+        description: 'Default 50.',
+        required: false,
+      },
+    },
+  },
   record_har_start: {
     description:
       'Begin recording a HAR for the current page. Use `record_har_stop` (with the same `name`) to end the recording and get the HAR contents or write a file.',
@@ -1364,6 +1724,12 @@ export const commands: Commands = {
       },
     },
   },
+  reset_permissions: {
+    description:
+      'Clears any permission overrides for the current browser context, restoring default prompt behavior.',
+    category: 'Emulation',
+    args: {},
+  },
   resize_page: {
     description:
       "Resizes the selected page's window so that the page has specified dimension",
@@ -1382,6 +1748,12 @@ export const commands: Commands = {
         required: true,
       },
     },
+  },
+  save_mhtml: {
+    description:
+      'Save the active page as an MHTML archive (CDP `Page.captureSnapshot` with format `mhtml`).',
+    category: 'Page export',
+    args: {},
   },
   screencast_start: {
     description:
@@ -1402,6 +1774,32 @@ export const commands: Commands = {
       'Stops the active screencast recording on the selected page. (requires flag: --experimentalScreencast=true)',
     category: 'Debugging',
     args: {},
+  },
+  scroll_into_view: {
+    description: 'Scrolls the element identified by uid into the viewport.',
+    category: 'Input automation',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      block: {
+        name: 'block',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['start', 'center', 'end', 'nearest'],
+      },
+      inline: {
+        name: 'inline',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['start', 'center', 'end', 'nearest'],
+      },
+    },
   },
   select_page: {
     description: 'Select a page as a context for future tool calls.',
@@ -1535,6 +1933,44 @@ export const commands: Commands = {
       },
     },
   },
+  start_css_coverage: {
+    description: 'Start collecting CSS coverage on the active page.',
+    category: 'Code coverage',
+    args: {
+      resetOnNavigation: {
+        name: 'resetOnNavigation',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  start_js_coverage: {
+    description:
+      'Start collecting JavaScript code coverage on the active page. Stop with `stop_js_coverage` to retrieve the report.',
+    category: 'Code coverage',
+    args: {
+      detailed: {
+        name: 'detailed',
+        type: 'boolean',
+        description:
+          'When true, collect detailed coverage (every byte). When false, only function-level granularity. Default true.',
+        required: false,
+      },
+      reportAnonymousScripts: {
+        name: 'reportAnonymousScripts',
+        type: 'boolean',
+        description: 'Include anonymous scripts (e.g. eval). Default false.',
+        required: false,
+      },
+      resetOnNavigation: {
+        name: 'resetOnNavigation',
+        type: 'boolean',
+        description: 'Reset coverage on navigation. Default true.',
+        required: false,
+      },
+    },
+  },
   start_service_worker: {
     description:
       'Starts a service worker registration (CDP `ServiceWorker.startWorker`).',
@@ -1545,6 +1981,44 @@ export const commands: Commands = {
         type: 'string',
         description: '',
         required: true,
+      },
+    },
+  },
+  stop_css_coverage: {
+    description: 'Stop CSS coverage and return the report.',
+    category: 'Code coverage',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      summaryOnly: {
+        name: 'summaryOnly',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  stop_js_coverage: {
+    description:
+      'Stop JS coverage and return the report. If `filePath` is set, the JSON is written to disk; otherwise the report is returned inline.',
+    category: 'Code coverage',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      summaryOnly: {
+        name: 'summaryOnly',
+        type: 'boolean',
+        description:
+          'Return only per-URL byte usage totals instead of full ranges. Default false.',
+        required: false,
       },
     },
   },
