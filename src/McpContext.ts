@@ -14,6 +14,7 @@ import {UniverseManager} from './DevtoolsUtils.js';
 import type {HarRecorder} from './HarRecorder.js';
 import {HeapSnapshotManager} from './HeapSnapshotManager.js';
 import type {AggregatedInfoWithUid} from './HeapSnapshotManager.js';
+import {IssueAggregator} from './IssueAggregator.js';
 import {McpPage} from './McpPage.js';
 import {NetworkInterceptionManager} from './NetworkInterceptionManager.js';
 import {
@@ -22,6 +23,7 @@ import {
   type ListenerMap,
   type UncaughtError,
 } from './PageCollector.js';
+import {RecorderManager} from './RecorderManager.js';
 import {
   Locator,
   PredefinedNetworkConditions,
@@ -130,6 +132,10 @@ export class McpContext implements Context {
   // Phase 3: persistent interception registry + named HAR recordings.
   #interceptors = new NetworkInterceptionManager();
   #harRecorders = new Map<string, HarRecorder>();
+  // Phase 7.3: real Issues panel aggregator (gated experimental).
+  #issueAggregator = new IssueAggregator();
+  // Phase 7.4: in-memory user-action recorder (gated experimental).
+  #recorderManager = new RecorderManager();
   #roots: Root[] | undefined = undefined;
 
   private constructor(
@@ -456,6 +462,16 @@ export class McpContext implements Context {
   /** Phase 3: shared network interception registry. */
   getInterceptionManager(): NetworkInterceptionManager {
     return this.#interceptors;
+  }
+
+  /** Phase 7.3: real Issues panel aggregator. */
+  getIssueAggregator(): IssueAggregator {
+    return this.#issueAggregator;
+  }
+
+  /** Phase 7.4: user-action recorder. */
+  getRecorderManager(): RecorderManager {
+    return this.#recorderManager;
   }
 
   /** Phase 3: HAR recording state. */

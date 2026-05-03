@@ -1,5 +1,60 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 7: debugger, axe, real Issues, recorder, local overrides
+
+Ships every item that was deferred from Phase 6. All tools are gated behind
+hidden `--experimental<Name>` flags (default off) — safer rollout pattern,
+mirrors `--experimentalCdpPassthrough`.
+
+### Debugger (`--experimentalDebugger`)
+
+13 tools backed by CDP `Debugger.*` and `DOMDebugger.*` domains:
+- `debugger_enable`, `set_breakpoint`, `remove_breakpoint`,
+  `list_breakpoints`, `set_xhr_breakpoint`, `set_dom_breakpoint`.
+- `pause`, `resume`, `step_over`, `step_into`, `step_out`.
+- `get_call_stack` (caches the most recent `Debugger.paused` event),
+  `get_scope_variables`, `evaluate_in_scope`.
+
+### axe-core a11y audits (`--experimentalAxe`)
+
+Adds `axe-core` as a runtime dependency (~600 KB minified):
+- `run_axe_audit({rules?, includeOnly?, exclude?, resultTypes?, runOnly?})` —
+  injects axe into the page on first call, runs structured audit.
+- `list_axe_rules({tag?})`, `get_axe_rule({ruleId})`.
+
+### Real Issues panel (`--experimentalIssues`)
+
+New `IssueAggregator` runtime class subscribing to CDP `Audits.issueAdded`
+events per page (lazy install, capped buffer, cleared on page close):
+- `list_issues({pageSize?, pageIdx?, types?})` (paginated).
+- `get_issue({issueId})`, `clear_issues`.
+
+### Recorder (`--experimentalRecorder`)
+
+New `RecorderManager` runtime class with explicit step recording. Exports
+to JSON / Puppeteer / Playwright:
+- `recorder_start({name})`, `recorder_record_step({type, payload?})`,
+  `recorder_stop({name, exportFormat?, filePath?})`.
+- `list_recordings`, `get_recording`.
+- `replay_recording({recordingPath})` — best-effort JSON replay through
+  the active page (selector-only steps that lack a selector are logged
+  and skipped).
+
+### Local overrides (`--experimentalLocalOverrides`)
+
+Builds on Phase 3's `NetworkInterceptionManager`:
+- `InterceptorRule` gains an additive `bodyFromPath` field — fulfill rules
+  read the response body lazily from disk on every match, so editing the
+  file takes effect without re-registering. Fully backward compatible.
+- `add_local_override({urlPattern, contentPath, contentType?, status?})`,
+  `list_overrides`, `remove_override`, `enable_overrides`,
+  `disable_overrides`.
+
+### New CLI flags (all hidden, default off)
+
+`--experimentalDebugger`, `--experimentalAxe`, `--experimentalIssues`,
+`--experimentalRecorder`, `--experimentalLocalOverrides`.
+
 ## Unreleased — vamp fork, Phase 6 (partial): coverage, sensors/permissions, exports, DOM extras, multi-tab, lighthouse perf
 
 Phase 6 is the kitchen-sink phase from the original review. Ships the

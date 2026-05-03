@@ -23,6 +23,39 @@ export type Commands = Record<
   }
 >;
 export const commands: Commands = {
+  add_local_override: {
+    description:
+      "Register a local override: requests matching urlPattern are fulfilled with the contents of `contentPath` on disk. The file is re-read on every match so editing the file takes effect without re-registering.\n\nReturns the new `overrideId`. Wraps Phase 3's `intercept_network` with `action: fulfill` + `bodyFromPath`. (requires flag: --experimentalLocalOverrides=true)",
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description: 'URLPattern to match (e.g. `https://example.com/api/*`).',
+        required: true,
+      },
+      contentPath: {
+        name: 'contentPath',
+        type: 'string',
+        description:
+          'Absolute path to the file whose contents serve the response.',
+        required: true,
+      },
+      contentType: {
+        name: 'contentType',
+        type: 'string',
+        description:
+          'Response Content-Type. If omitted, no content-type header is set.',
+        required: false,
+      },
+      status: {
+        name: 'status',
+        type: 'integer',
+        description: 'Response status code. Default 200.',
+        required: false,
+      },
+    },
+  },
   block_urls: {
     description:
       'Block requests matching any of the provided URLPattern strings. Convenience wrapper around `intercept_network` with `action: abort`.',
@@ -214,6 +247,12 @@ export const commands: Commands = {
     category: 'Network interception',
     args: {},
   },
+  clear_issues: {
+    description:
+      'Clears the issue buffer for the active page. The aggregator stays enabled — subsequent issues will be captured. (requires flag: --experimentalIssues=true)',
+    category: 'Debugging',
+    args: {},
+  },
   clear_local_storage: {
     description:
       "Clears localStorage on the active page's origin. If `key` is provided, removes only that key; otherwise removes everything.",
@@ -312,6 +351,12 @@ export const commands: Commands = {
       },
     },
   },
+  debugger_enable: {
+    description:
+      'Enables CDP `Debugger.*` domain on the active page. Idempotent. Required before any other debugger tool runs. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
   delete_cache: {
     description: 'Deletes a CacheStorage cache by cacheId.',
     category: 'Storage',
@@ -391,6 +436,12 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  disable_overrides: {
+    description:
+      'Temporarily disables every override for the current page (the underlying interceptor rules are removed). Definitions are kept; call `enable_overrides` to re-register. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {},
   },
   drag: {
     description: 'Drag an element onto another element',
@@ -592,6 +643,37 @@ export const commands: Commands = {
       },
     },
   },
+  enable_overrides: {
+    description:
+      'Re-registers every override that was disabled by `disable_overrides`. New interceptorIds are issued. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {},
+  },
+  evaluate_in_scope: {
+    description:
+      'Evaluate an expression in the context of a paused call frame (CDP `Debugger.evaluateOnCallFrame`). (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      callFrameId: {
+        name: 'callFrameId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      expression: {
+        name: 'expression',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      returnByValue: {
+        name: 'returnByValue',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+    },
+  },
   evaluate_in_worker: {
     description:
       'Evaluates a JavaScript expression inside a service worker. The worker is identified by a substring of its URL (e.g. "sw.js" or "/service-worker.js").\n\nThe script is run as an expression. Use `evaluate_script` for page contexts; this tool exists for SW debugging (`caches.keys()`, `self.registration.update()`, etc.).',
@@ -700,6 +782,19 @@ export const commands: Commands = {
       },
     },
   },
+  get_axe_rule: {
+    description:
+      'Returns details for a single axe-core rule by id (description, help, helpUrl, tags). (requires flag: --experimentalAxe=true)',
+    category: 'Debugging',
+    args: {
+      ruleId: {
+        name: 'ruleId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
   get_box_model: {
     description:
       'Returns the box model (content/padding/border/margin quads, plus width/height) for an element by uid.',
@@ -743,6 +838,12 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  get_call_stack: {
+    description:
+      'Returns the call stack from the most recent `Debugger.paused` event. Empty if not paused. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
   },
   get_computed_styles: {
     description:
@@ -819,6 +920,19 @@ export const commands: Commands = {
         type: 'string',
         description: '',
         required: false,
+      },
+    },
+  },
+  get_issue: {
+    description:
+      'Returns the full details for a single issue by id (from `list_issues`). (requires flag: --experimentalIssues=true)',
+    category: 'Debugging',
+    args: {
+      issueId: {
+        name: 'issueId',
+        type: 'integer',
+        description: '',
+        required: true,
       },
     },
   },
@@ -930,6 +1044,45 @@ export const commands: Commands = {
         type: 'number',
         description: 'The page size for pagination.',
         required: false,
+      },
+    },
+  },
+  get_recording: {
+    description:
+      'Peek at an active recording without stopping it. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      exportFormat: {
+        name: 'exportFormat',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['json', 'puppeteer', 'playwright'],
+      },
+    },
+  },
+  get_scope_variables: {
+    description:
+      'Return the properties of a scope object from the current paused call stack. Use `get_call_stack` first to find callFrameId / scopeIndex. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      callFrameId: {
+        name: 'callFrameId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      scopeIndex: {
+        name: 'scopeIndex',
+        type: 'integer',
+        description: '',
+        required: true,
       },
     },
   },
@@ -1121,6 +1274,26 @@ export const commands: Commands = {
       },
     },
   },
+  list_axe_rules: {
+    description:
+      "Returns axe-core's built-in rule catalog (id, tags, impact, description, help, helpUrl). Use to pick targeted rules for `run_axe_audit`. (requires flag: --experimentalAxe=true)",
+    category: 'Debugging',
+    args: {
+      tag: {
+        name: 'tag',
+        type: 'string',
+        description:
+          'Optional tag filter (e.g. "wcag2a", "best-practice", "section508").',
+        required: false,
+      },
+    },
+  },
+  list_breakpoints: {
+    description:
+      'Lists all currently-registered breakpoints for the active page. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
   list_caches: {
     description: 'Lists CacheStorage caches accessible from the active page.',
     category: 'Storage',
@@ -1211,6 +1384,32 @@ export const commands: Commands = {
     category: 'Network interception',
     args: {},
   },
+  list_issues: {
+    description:
+      "Returns DevTools issues (CSP, mixed content, cookies, low-contrast, deprecation, …) collected from `Audits.issueAdded` events for the active page.\n\nThe first call enables the Audits domain on the page; subsequent calls return whatever's been buffered since. (requires flag: --experimentalIssues=true)",
+    category: 'Debugging',
+    args: {
+      pageSize: {
+        name: 'pageSize',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pageIdx: {
+        name: 'pageIdx',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      types: {
+        name: 'types',
+        type: 'array',
+        description:
+          'Filter by issue code (e.g. "ContentSecurityPolicyIssue", "MixedContentIssue"). If omitted, all issues are returned.',
+        required: false,
+      },
+    },
+  },
   list_network_requests: {
     description:
       'List all requests for the currently selected page since the last navigation.',
@@ -1247,8 +1446,20 @@ export const commands: Commands = {
       },
     },
   },
+  list_overrides: {
+    description:
+      'Lists all registered local overrides for the current page. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {},
+  },
   list_pages: {
     description: 'Get a list of pages open in the browser.',
+    category: 'Navigation automation',
+    args: {},
+  },
+  list_recordings: {
+    description:
+      'Lists all active recordings. (requires flag: --experimentalRecorder=true)',
     category: 'Navigation automation',
     args: {},
   },
@@ -1446,6 +1657,12 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  pause: {
+    description:
+      'Force the JS debugger to pause at the next statement. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
   },
   performance_analyze_insight: {
     description:
@@ -1699,6 +1916,75 @@ export const commands: Commands = {
       },
     },
   },
+  recorder_record_step: {
+    description:
+      'Append a step to all active recordings. Use this from the orchestrator (LLM) before / after invoking input tools to build a replayable script.\n\nThe free-form `payload` field carries the per-step parameters (e.g. {url} for navigate, {selector, value} for fill). The receiving recordings preserve it verbatim. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: [
+          'navigate',
+          'click',
+          'fill',
+          'press_key',
+          'type_text',
+          'drag',
+          'upload_file',
+          'wait_for',
+          'custom',
+        ],
+      },
+      payload: {
+        name: 'payload',
+        type: 'object',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  recorder_start: {
+    description:
+      'Begin a new in-memory user-action recording. Multiple recordings can be active at once (keyed by `name`). (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  recorder_stop: {
+    description:
+      'Stop a recording and return / save it. Supported export formats: `json`, `puppeteer`, `playwright`. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      exportFormat: {
+        name: 'exportFormat',
+        type: 'string',
+        description: 'Default `json`.',
+        required: false,
+        enum: ['json', 'puppeteer', 'playwright'],
+      },
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   reload_extension: {
     description:
       'Reloads an unpacked Chrome extension by its ID. (requires flag: --categoryExtensions=true)',
@@ -1712,12 +1998,51 @@ export const commands: Commands = {
       },
     },
   },
+  remove_breakpoint: {
+    description:
+      'Remove a previously-registered breakpoint by id. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      breakpointId: {
+        name: 'breakpointId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
   remove_interceptor: {
     description: 'Removes a single interceptor by id.',
     category: 'Network interception',
     args: {
       interceptorId: {
         name: 'interceptorId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  remove_override: {
+    description:
+      'Removes a single local override by id. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {
+      overrideId: {
+        name: 'overrideId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  replay_recording: {
+    description:
+      'Load a JSON recording from disk and replay it through the existing input/navigation tools.\n\nReplay is best-effort: only `navigate`, `press_key`, `type_text`, and `wait_for` steps run unconditionally. Selector-only steps that lack a selector (e.g. uid-only `click`) are logged and skipped — the LLM that generated the recording is expected to convert uids to selectors before saving. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      recordingPath: {
+        name: 'recordingPath',
         type: 'string',
         description: '',
         required: true,
@@ -1746,6 +2071,53 @@ export const commands: Commands = {
         type: 'number',
         description: 'Page height',
         required: true,
+      },
+    },
+  },
+  resume: {
+    description:
+      'Resume execution after a pause. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  run_axe_audit: {
+    description:
+      "Inject axe-core into the active page and run an accessibility audit. Returns axe's structured result (violations / passes / incomplete / inapplicable).\n\nUse `list_axe_rules` to discover rule ids. `includeOnly` and `exclude` accept CSS selectors. (requires flag: --experimentalAxe=true)",
+    category: 'Debugging',
+    args: {
+      rules: {
+        name: 'rules',
+        type: 'array',
+        description:
+          'Rule ids to enable (whitelist). If omitted, all default rules run.',
+        required: false,
+      },
+      includeOnly: {
+        name: 'includeOnly',
+        type: 'array',
+        description:
+          'CSS selectors. If set, axe only audits descendants of these.',
+        required: false,
+      },
+      exclude: {
+        name: 'exclude',
+        type: 'array',
+        description: 'CSS selectors. Subtrees rooted at these are skipped.',
+        required: false,
+      },
+      resultTypes: {
+        name: 'resultTypes',
+        type: 'array',
+        description:
+          'Result kinds to return. Default ["violations", "incomplete"] to keep payload small.',
+        required: false,
+      },
+      runOnly: {
+        name: 'runOnly',
+        type: 'array',
+        description:
+          'WCAG / best-practice tag filter (e.g. ["wcag2a", "wcag2aa"]).',
+        required: false,
       },
     },
   },
@@ -1820,6 +2192,37 @@ export const commands: Commands = {
       },
     },
   },
+  set_breakpoint: {
+    description:
+      'Set a JS breakpoint by URL + line (CDP `Debugger.setBreakpointByUrl`). (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      url: {
+        name: 'url',
+        type: 'string',
+        description: 'Source URL (or url-regex via the `urlRegex` field).',
+        required: true,
+      },
+      lineNumber: {
+        name: 'lineNumber',
+        type: 'integer',
+        description: '',
+        required: true,
+      },
+      columnNumber: {
+        name: 'columnNumber',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      condition: {
+        name: 'condition',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   set_cookie: {
     description:
       'Sets a cookie in the active browser context. At least one of `url` or `domain` must be provided.',
@@ -1884,6 +2287,26 @@ export const commands: Commands = {
       },
     },
   },
+  set_dom_breakpoint: {
+    description:
+      'Pause when a DOM mutation occurs on the element with the given uid. type: subtree-modified | attribute-modified | node-removed. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: ['subtree-modified', 'attribute-modified', 'node-removed'],
+      },
+    },
+  },
   set_local_storage: {
     description: "Sets a localStorage entry on the active page's origin.",
     category: 'Storage',
@@ -1914,6 +2337,19 @@ export const commands: Commands = {
       },
       value: {
         name: 'value',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  set_xhr_breakpoint: {
+    description:
+      'Pause whenever an XHR/fetch URL contains the given substring (CDP `DOMDebugger.setXHRBreakpoint`). (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      urlSubstring: {
+        name: 'urlSubstring',
         type: 'string',
         description: '',
         required: true,
@@ -1983,6 +2419,24 @@ export const commands: Commands = {
         required: true,
       },
     },
+  },
+  step_into: {
+    description:
+      'Step into the next function call. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  step_out: {
+    description:
+      'Step out of the current function. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  step_over: {
+    description:
+      'Step over the current statement. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
   },
   stop_css_coverage: {
     description: 'Stop CSS coverage and return the report.',

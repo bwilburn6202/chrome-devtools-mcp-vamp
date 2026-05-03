@@ -195,6 +195,8 @@ export interface InterceptorRuleLike {
   status?: number;
   headers?: Record<string, string>;
   body?: string;
+  /** Phase 7.5: file-backed fulfill body (read on each match). */
+  bodyFromPath?: string;
   contentType?: string;
   latencyMs?: number;
   setHeaders?: Record<string, string>;
@@ -212,6 +214,47 @@ export interface HarRecorderLike {
   readonly includeBodies: boolean;
   stop(): unknown;
   toHarJson(): string;
+}
+
+/** Phase 7.3: structural shape of the IssueAggregator exposed to tools. */
+export interface IssueAggregatorLike {
+  enableForPage(page: Page, capacity?: number): Promise<void>;
+  listForPage(page: Page): Array<{
+    id: number;
+    code: string;
+    details: unknown;
+    receivedAt: number;
+  }>;
+  clearForPage(page: Page): number;
+  getById(
+    id: number,
+  ):
+    | {id: number; code: string; details: unknown; receivedAt: number}
+    | undefined;
+}
+
+/** Phase 7.4: structural shape of the RecorderManager exposed to tools. */
+export interface RecorderManagerLike {
+  start(name: string): {name: string; startedAt: number; steps: unknown[]};
+  recordStep(step: unknown): void;
+  stop(name: string): {
+    name: string;
+    startedAt: number;
+    finishedAt?: number;
+    steps: unknown[];
+  };
+  get(
+    name: string,
+  ):
+    | {name: string; startedAt: number; finishedAt?: number; steps: unknown[]}
+    | undefined;
+  list(): Array<{
+    name: string;
+    startedAt: number;
+    finishedAt?: number;
+    steps: unknown[];
+  }>;
+  isAnyActive(): boolean;
 }
 
 /** Phase 1.6: per-tool tunables (drag delays, lighthouse timeouts, etc.). */
@@ -240,6 +283,10 @@ export type Context = Readonly<{
   getTuning(): ToolTuning;
   /** Phase 3: persistent network interception registry. */
   getInterceptionManager(): InterceptionManagerLike;
+  /** Phase 7.3: real Issues panel aggregator (Audits.issueAdded events). */
+  getIssueAggregator(): IssueAggregatorLike;
+  /** Phase 7.4: user-action recorder. */
+  getRecorderManager(): RecorderManagerLike;
   /** Phase 3: HAR recording state (keyed by user-provided name). */
   getHarRecorder(name: string): HarRecorderLike | undefined;
   setHarRecorder(name: string, recorder: HarRecorderLike): void;

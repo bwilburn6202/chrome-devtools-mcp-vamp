@@ -204,6 +204,41 @@ export const cliOptions = {
     describe:
       'Phase 4 (experimental): permit a small allowlist of "dangerous" CDP methods (Browser.close, Target.disposeBrowserContext, Storage.clearDataForOrigin, etc.) via `cdp_send`. Requires --experimentalCdpPassthrough.',
   },
+  experimentalDebugger: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable JS debugger tools (set_breakpoint, pause, step_*, get_call_stack, get_scope_variables, evaluate_in_scope, set_xhr_breakpoint, set_dom_breakpoint).',
+  },
+  experimentalAxe: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable axe-core a11y audit tools (run_axe_audit, list_axe_rules, get_axe_rule). Requires the axe-core runtime dependency.',
+  },
+  experimentalIssues: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable real DevTools Issues panel tools (list_issues, get_issue, clear_issues), backed by `Audits.issueAdded` events instead of the legacy FakeIssuesManager.',
+  },
+  experimentalRecorder: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable user-action recorder tools (recorder_start, recorder_stop, list_recordings, get_recording, replay_recording).',
+  },
+  experimentalLocalOverrides: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable file-backed local override tools (add_local_override, list_overrides, remove_override, enable_overrides, disable_overrides).',
+  },
   experimentalScreencast: {
     type: 'boolean',
     describe:

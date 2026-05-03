@@ -19,7 +19,13 @@
  *
  * URL patterns use the same URLPattern API used by the navigation
  * allowlist so callers can copy idioms.
+ *
+ * Phase 7.5: a `bodyFromPath` field on fulfill rules reads the response
+ * body lazily from disk on every match — backs the local-overrides
+ * feature without forcing the manager to know what an "override" is.
  */
+
+import fs from 'node:fs/promises';
 
 import type {HTTPRequest, Page} from './third_party/index.js';
 
@@ -37,6 +43,13 @@ export interface InterceptorRule {
   headers?: Record<string, string>;
   body?: string;
   contentType?: string;
+  /**
+   * Phase 7.5: when set, the response body is read from this path each
+   * time the rule matches (so editing the file on disk takes effect
+   * without re-registering). `body` and `bodyFromPath` are mutually
+   * exclusive; if both are set, `bodyFromPath` wins.
+   */
+  bodyFromPath?: string;
   /** Latency injected before the response is delivered (ms). */
   latencyMs?: number;
   /** For action: 'modify' — applied to the outgoing request before continuing. */
@@ -185,10 +198,29 @@ export class NetworkInterceptionManager {
           if (rule.contentType && !headers['content-type']) {
             headers['content-type'] = rule.contentType;
           }
+          let body: string | Buffer;
+          if (rule.bodyFromPath) {
+            try {
+              body = await fs.readFile(rule.bodyFromPath);
+            } catch (err) {
+              // Disk read failure: surface a plain-text 500 so the caller
+              // can see what happened instead of silently aborting.
+              await req.respond({
+                status: 500,
+                headers: {'content-type': 'text/plain'},
+                body: `Local override read failed: ${
+                  err instanceof Error ? err.message : String(err)
+                }`,
+              });
+              return;
+            }
+          } else {
+            body = rule.body ?? '';
+          }
           await req.respond({
             status: rule.status ?? 200,
             headers,
-            body: rule.body ?? '',
+            body,
             contentType: rule.contentType,
           });
           return;
