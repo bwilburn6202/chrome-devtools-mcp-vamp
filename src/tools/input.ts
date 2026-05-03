@@ -207,8 +207,9 @@ async function fillFormElement(
     if (aXNode && aXNode.role === 'combobox' && hasOptionChildren(aXNode)) {
       await selectOption(handle, aXNode, value);
     } else {
-      // Increase timeout for longer input values.
-      const timeoutPerChar = 10; // ms
+      // Phase 1.6: per-character timeout multiplier configurable via
+      // --fillCharMultiplierMs (default 10).
+      const timeoutPerChar = context.getTuning().fillCharMultiplierMs;
       const fillTimeout =
         page.pptrPage.getDefaultTimeout() + value.length * timeoutPerChar;
       await handle.asLocator().setTimeout(fillTimeout).fill(value);
@@ -295,15 +296,17 @@ export const drag = definePageTool({
     includeSnapshot: includeSnapshotSchema,
   },
   blockedByDialog: true,
-  handler: async (request, response) => {
+  handler: async (request, response, context) => {
     const fromHandle = await request.page.getElementByUid(
       request.params.from_uid,
     );
     const toHandle = await request.page.getElementByUid(request.params.to_uid);
+    // Phase 1.6: drag delay configurable via --dragDelayMs (default 50).
+    const dragDelayMs = context.getTuning().dragDelayMs;
     try {
       await request.page.waitForEventsAfterAction(async () => {
         await fromHandle.drag(toHandle);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, dragDelayMs));
         await toHandle.drop(fromHandle);
       });
       response.appendResponseLine(`Successfully dragged an element`);
@@ -386,9 +389,11 @@ export const uploadFile = definePageTool({
         // Some sites use a proxy element to trigger file upload instead of
         // a type=file element. In this case, we want to default to
         // Page.waitForFileChooser() and upload the file this way.
+        // Phase 1.6: timeout configurable via --fileChooserTimeoutMs.
+        const timeout = context.getTuning().fileChooserTimeoutMs;
         try {
           const [fileChooser] = await Promise.all([
-            request.page.pptrPage.waitForFileChooser({timeout: 3000}),
+            request.page.pptrPage.waitForFileChooser({timeout}),
             handle.asLocator().click(),
           ]);
           await fileChooser.accept([filePath]);

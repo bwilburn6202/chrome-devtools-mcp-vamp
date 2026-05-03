@@ -72,6 +72,12 @@ export interface ImageContentData {
 export interface SnapshotParams {
   verbose?: boolean;
   filePath?: string;
+  /**
+   * Phase 1.2: when true, ignore the cached snapshot and rebuild from scratch.
+   * Default false — the McpResponse layer reuses the cached snapshot when no
+   * mutation has occurred since it was built.
+   */
+  forceRefresh?: boolean;
 }
 
 export interface LighthouseData {
@@ -167,6 +173,104 @@ export type SupportedExtensions =
   | '.csv'
   | '.json.gz';
 
+/** Phase 3: structural shape of the network interception registry exposed to tools. */
+export interface InterceptionManagerLike {
+  listForPage(pageId: number): InterceptorRuleLike[];
+  listAll(): InterceptorRuleLike[];
+  addRule(
+    page: Page,
+    pageId: number,
+    rule: Omit<InterceptorRuleLike, 'id' | 'pageId' | 'createdAt'>,
+  ): Promise<InterceptorRuleLike>;
+  removeRule(page: Page, pageId: number, ruleId: string): Promise<boolean>;
+  clearForPage(page: Page, pageId: number): Promise<number>;
+}
+
+export interface InterceptorRuleLike {
+  id: string;
+  pageId: number;
+  urlPattern: string;
+  action: 'continue' | 'abort' | 'fulfill' | 'modify';
+  abortReason?: string;
+  status?: number;
+  headers?: Record<string, string>;
+  body?: string;
+  /** Phase 7.5: file-backed fulfill body (read on each match). */
+  bodyFromPath?: string;
+  contentType?: string;
+  latencyMs?: number;
+  setHeaders?: Record<string, string>;
+  removeHeaders?: string[];
+  method?: string;
+  postData?: string;
+  createdAt: number;
+}
+
+/** Phase 3: structural shape of the HAR recorder exposed to tools. */
+export interface HarRecorderLike {
+  readonly name: string;
+  readonly pageId: number;
+  readonly startedAt: number;
+  readonly includeBodies: boolean;
+  stop(): unknown;
+  toHarJson(): string;
+}
+
+/** Phase 7.3: structural shape of the IssueAggregator exposed to tools. */
+export interface IssueAggregatorLike {
+  enableForPage(page: Page, capacity?: number): Promise<void>;
+  listForPage(page: Page): Array<{
+    id: number;
+    code: string;
+    details: unknown;
+    receivedAt: number;
+  }>;
+  clearForPage(page: Page): number;
+  getById(
+    id: number,
+  ):
+    | {id: number; code: string; details: unknown; receivedAt: number}
+    | undefined;
+}
+
+/** Phase 7.4: structural shape of the RecorderManager exposed to tools. */
+export interface RecorderManagerLike {
+  start(name: string): {name: string; startedAt: number; steps: unknown[]};
+  recordStep(step: unknown): void;
+  stop(name: string): {
+    name: string;
+    startedAt: number;
+    finishedAt?: number;
+    steps: unknown[];
+  };
+  get(
+    name: string,
+  ):
+    | {name: string; startedAt: number; finishedAt?: number; steps: unknown[]}
+    | undefined;
+  list(): Array<{
+    name: string;
+    startedAt: number;
+    finishedAt?: number;
+    steps: unknown[];
+  }>;
+  isAnyActive(): boolean;
+}
+
+/** Phase 1.6: per-tool tunables (drag delays, lighthouse timeouts, etc.). */
+export interface ToolTuning {
+  dragDelayMs: number;
+  fileChooserTimeoutMs: number;
+  fillCharMultiplierMs: number;
+  lighthouseMaxWaitMs: number;
+  slimNavigateTimeoutMs: number;
+  performanceAutoStopMs: number;
+  screenshotInlineLimitBytes: number;
+  snapshotMaxNodes: number;
+  consoleStackMaxFrames: number;
+  stackTraceTimeoutMs: number;
+}
+
 /**
  * Only add methods used by tools/*.
  */
@@ -175,6 +279,19 @@ export type Context = Readonly<{
   isRunningPerformanceTrace(): boolean;
   setIsRunningPerformanceTrace(x: boolean): void;
   isCruxEnabled(): boolean;
+  /** Phase 1.6: tunables for hardcoded constants (defaults merged with user CLI flags). */
+  getTuning(): ToolTuning;
+  /** Phase 3: persistent network interception registry. */
+  getInterceptionManager(): InterceptionManagerLike;
+  /** Phase 7.3: real Issues panel aggregator (Audits.issueAdded events). */
+  getIssueAggregator(): IssueAggregatorLike;
+  /** Phase 7.4: user-action recorder. */
+  getRecorderManager(): RecorderManagerLike;
+  /** Phase 3: HAR recording state (keyed by user-provided name). */
+  getHarRecorder(name: string): HarRecorderLike | undefined;
+  setHarRecorder(name: string, recorder: HarRecorderLike): void;
+  deleteHarRecorder(name: string): void;
+  listHarRecorders(): HarRecorderLike[];
   recordedTraces(): TraceResult[];
   storeTraceRecording(result: TraceResult): void;
   getPageById(pageId: number): ContextPage;

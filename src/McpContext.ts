@@ -11,15 +11,19 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 import type {TargetUniverse} from './DevtoolsUtils.js';
 import {UniverseManager} from './DevtoolsUtils.js';
+import type {HarRecorder} from './HarRecorder.js';
 import {HeapSnapshotManager} from './HeapSnapshotManager.js';
 import type {AggregatedInfoWithUid} from './HeapSnapshotManager.js';
+import {IssueAggregator} from './IssueAggregator.js';
 import {McpPage} from './McpPage.js';
+import {NetworkInterceptionManager} from './NetworkInterceptionManager.js';
 import {
   NetworkCollector,
   ConsoleCollector,
   type ListenerMap,
   type UncaughtError,
 } from './PageCollector.js';
+import {RecorderManager} from './RecorderManager.js';
 import {
   Locator,
   PredefinedNetworkConditions,
@@ -55,7 +59,39 @@ interface McpContextOptions {
   experimentalIncludeAllPages?: boolean;
   // Whether CrUX data should be fetched.
   performanceCrux: boolean;
+  // Phase 1.4 / 1.8: tunable in-memory caches.
+  heapSnapshotCacheSize?: number;
+  traceHistoryLimit?: number;
+  // Phase 1.6: per-tool tunables exposed via getTuning().
+  tuning?: Partial<RuntimeTuning>;
 }
+
+/** Phase 1.6: tunable defaults consumed by individual tools. */
+export interface RuntimeTuning {
+  dragDelayMs: number;
+  fileChooserTimeoutMs: number;
+  fillCharMultiplierMs: number;
+  lighthouseMaxWaitMs: number;
+  slimNavigateTimeoutMs: number;
+  performanceAutoStopMs: number;
+  screenshotInlineLimitBytes: number;
+  snapshotMaxNodes: number;
+  consoleStackMaxFrames: number;
+  stackTraceTimeoutMs: number;
+}
+
+const DEFAULT_TUNING: RuntimeTuning = {
+  dragDelayMs: 50,
+  fileChooserTimeoutMs: 3000,
+  fillCharMultiplierMs: 10,
+  lighthouseMaxWaitMs: 30_000,
+  slimNavigateTimeoutMs: 30_000,
+  performanceAutoStopMs: 5000,
+  screenshotInlineLimitBytes: 2 * 1024 * 1024,
+  snapshotMaxNodes: 5000,
+  consoleStackMaxFrames: 50,
+  stackTraceTimeoutMs: 1000,
+};
 
 const DEFAULT_TIMEOUT = 5_000;
 const NAVIGATION_TIMEOUT = 10_000;
@@ -92,7 +128,14 @@ export class McpContext implements Context {
 
   #locatorClass: typeof Locator;
   #options: McpContextOptions;
-  #heapSnapshotManager = new HeapSnapshotManager();
+  #heapSnapshotManager: HeapSnapshotManager;
+  // Phase 3: persistent interception registry + named HAR recordings.
+  #interceptors = new NetworkInterceptionManager();
+  #harRecorders = new Map<string, HarRecorder>();
+  // Phase 7.3: real Issues panel aggregator (gated experimental).
+  #issueAggregator = new IssueAggregator();
+  // Phase 7.4: in-memory user-action recorder (gated experimental).
+  #recorderManager = new RecorderManager();
   #roots: Root[] | undefined = undefined;
 
   private constructor(
@@ -105,6 +148,9 @@ export class McpContext implements Context {
     this.logger = logger;
     this.#locatorClass = locatorClass;
     this.#options = options;
+    this.#heapSnapshotManager = new HeapSnapshotManager({
+      maxCacheSize: options.heapSnapshotCacheSize,
+    });
 
     this.#networkCollector = new NetworkCollector(this.browser);
 
@@ -406,6 +452,43 @@ export class McpContext implements Context {
 
   isCruxEnabled(): boolean {
     return this.#options.performanceCrux;
+  }
+
+  /** Phase 1.6: per-tool tunables (defaults merged with user overrides). */
+  getTuning(): RuntimeTuning {
+    return {...DEFAULT_TUNING, ...(this.#options.tuning ?? {})};
+  }
+
+  /** Phase 3: shared network interception registry. */
+  getInterceptionManager(): NetworkInterceptionManager {
+    return this.#interceptors;
+  }
+
+  /** Phase 7.3: real Issues panel aggregator. */
+  getIssueAggregator(): IssueAggregator {
+    return this.#issueAggregator;
+  }
+
+  /** Phase 7.4: user-action recorder. */
+  getRecorderManager(): RecorderManager {
+    return this.#recorderManager;
+  }
+
+  /** Phase 3: HAR recording state. */
+  getHarRecorder(name: string): HarRecorder | undefined {
+    return this.#harRecorders.get(name);
+  }
+
+  setHarRecorder(name: string, recorder: HarRecorder): void {
+    this.#harRecorders.set(name, recorder);
+  }
+
+  deleteHarRecorder(name: string): void {
+    this.#harRecorders.delete(name);
+  }
+
+  listHarRecorders(): HarRecorder[] {
+    return [...this.#harRecorders.values()];
   }
 
   getSelectedPptrPage(): Page {
@@ -718,9 +801,13 @@ export class McpContext implements Context {
   }
 
   storeTraceRecording(result: TraceResult): void {
-    // Clear the trace results because we only consume the latest trace currently.
-    this.#traceResults = [];
+    // Phase 1.8: keep the most recent N traces instead of clobbering on every
+    // recording. Newest is appended at the end.
+    const limit = Math.max(1, this.#options.traceHistoryLimit ?? 5);
     this.#traceResults.push(result);
+    while (this.#traceResults.length > limit) {
+      this.#traceResults.shift();
+    }
   }
 
   recordedTraces(): TraceResult[] {

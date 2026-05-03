@@ -46,6 +46,13 @@ export class McpPage implements ContextPage {
   textSnapshot: TextSnapshot | null = null;
   uniqueBackendNodeIdToMcpId = new Map<string, string>();
   extraHandles: ElementHandle[] = [];
+  // Phase 1.2: monotonic counter bumped whenever the DOM may have changed
+  // (navigation, post-action wait, etc.). McpResponse compares this to the
+  // counter snapshotted at the time the cached TextSnapshot was built; if
+  // they match, the cached snapshot is reused instead of being rebuilt.
+  snapshotMutationCounter = 0;
+  snapshotComputedAtCounter = -1;
+  snapshotComputedVerbose: boolean | undefined = undefined;
 
   // Emulation
   emulationSettings: EmulationSettings = {};
@@ -55,7 +62,10 @@ export class McpPage implements ContextPage {
   devToolsPage?: Page;
 
   // Dialog
-  #dialog?: Dialog;
+  // Phase 1.7: queue dialogs so rapid bursts (e.g. consecutive alerts) are
+  // not lost. The legacy `#dialog`-style accessors expose the head of the
+  // queue for backwards compatibility.
+  #dialogs: Dialog[] = [];
   #dialogHandler: (dialog: Dialog) => void;
 
   inPageTools: ToolGroup<ToolDefinition> | undefined;
@@ -64,27 +74,55 @@ export class McpPage implements ContextPage {
     this.pptrPage = page;
     this.id = id;
     this.#dialogHandler = (dialog: Dialog): void => {
-      this.#dialog = dialog;
+      this.#dialogs.push(dialog);
     };
     page.on('dialog', this.#dialogHandler);
+    // Mark snapshot stale on main-frame navigation. Sub-frame navigations are
+    // intentionally ignored here since they don't necessarily invalidate the
+    // top-level a11y tree we care about.
+    page.on('framenavigated', frame => {
+      if (frame === page.mainFrame()) {
+        this.markSnapshotStale();
+      }
+    });
+  }
+
+  markSnapshotStale(): void {
+    this.snapshotMutationCounter++;
   }
 
   get dialog(): Dialog | undefined {
-    return this.#dialog;
+    return this.#dialogs[0];
   }
 
   getDialog(): Dialog | undefined {
     return this.dialog;
   }
 
-  clearDialog(): void {
-    this.#dialog = undefined;
+  /**
+   * Phase 1.7: drain the head of the dialog queue. Repeated calls walk
+   * through queued dialogs in arrival order. Without an argument this clears
+   * just the head, preserving the prior single-slot semantics for callers
+   * that still call `clearDialog()` once per handle_dialog invocation.
+   */
+  clearDialog(opts?: {all?: boolean}): void {
+    if (opts?.all) {
+      this.#dialogs.length = 0;
+    } else {
+      this.#dialogs.shift();
+    }
+  }
+
+  /** Phase 1.7: number of dialogs currently queued. */
+  pendingDialogCount(): number {
+    return this.#dialogs.length;
   }
 
   throwIfDialogOpen(): void {
-    if (this.#dialog) {
+    const dialog = this.#dialogs[0];
+    if (dialog) {
       throw new Error(
-        `A dialog is open (${this.#dialog.type()}: ${this.#dialog.message()}).`,
+        `A dialog is open (${dialog.type()}: ${dialog.message()}).`,
       );
     }
   }
@@ -129,7 +167,7 @@ export class McpPage implements ContextPage {
     return new WaitForHelper(this.pptrPage, cpuMultiplier, networkMultiplier);
   }
 
-  waitForEventsAfterAction(
+  async waitForEventsAfterAction(
     action: () => Promise<unknown>,
     options?: {timeout?: number; handleDialog?: 'accept' | 'dismiss' | string},
   ): Promise<void> {
@@ -137,7 +175,13 @@ export class McpPage implements ContextPage {
       this.cpuThrottlingRate,
       getNetworkMultiplierFromString(this.networkConditions),
     );
-    return helper.waitForEventsAfterAction(action, options);
+    try {
+      return await helper.waitForEventsAfterAction(action, options);
+    } finally {
+      // Any action that goes through waitForEventsAfterAction is assumed to
+      // mutate the page; invalidate the cached snapshot.
+      this.markSnapshotStale();
+    }
   }
 
   dispose(): void {
@@ -378,18 +422,9 @@ export class McpPage implements ContextPage {
       logger('no text snapshot');
       return;
     }
-    // TODO: index by backendNodeId instead.
-    const queue = [snapshot.root];
-    while (queue.length) {
-      const current = queue.pop()!;
-      if (current.backendNodeId === cdpBackendNodeId) {
-        return current.id;
-      }
-      for (const child of current.children) {
-        queue.push(child);
-      }
-    }
-    return;
+    // Phase 1.3: O(1) lookup via the precomputed backendNodeId index
+    // (replaces the previous BFS walk over snapshot.root).
+    return snapshot.backendNodeIdToNode.get(cdpBackendNodeId)?.id;
   }
 
   async getDevToolsData(): Promise<DevToolsData> {

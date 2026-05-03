@@ -56,6 +56,16 @@ export const screenshot = definePageTool({
     if (request.params.uid && request.params.fullPage) {
       throw new Error('Providing both "uid" and "fullPage" is not allowed.');
     }
+    // Phase 1.7 bug fix: previously the `quality` param was silently ignored
+    // for PNG. Reject it explicitly so callers know it has no effect.
+    if (
+      request.params.format === 'png' &&
+      request.params.quality !== undefined
+    ) {
+      throw new Error(
+        '`quality` is only valid for `jpeg` or `webp` formats; PNG does not support it.',
+      );
+    }
 
     let pageOrHandle: Page | ElementHandle;
     if (request.params.uid) {
@@ -88,6 +98,9 @@ export const screenshot = definePageTool({
       );
     }
 
+    // Phase 1.6: inline limit configurable via --screenshotInlineLimitBytes
+    // (default 2 MiB). Larger screenshots are written to a temp file.
+    const inlineLimit = context.getTuning().screenshotInlineLimitBytes;
     if (request.params.filePath) {
       const result = await context.saveFile(
         screenshot,
@@ -95,7 +108,7 @@ export const screenshot = definePageTool({
         `.${format}`,
       );
       response.appendResponseLine(`Saved screenshot to ${result.filename}.`);
-    } else if (screenshot.length >= 2_000_000) {
+    } else if (screenshot.length >= inlineLimit) {
       const {filepath} = await context.saveTemporaryFile(
         screenshot,
         `screenshot.${request.params.format}`,

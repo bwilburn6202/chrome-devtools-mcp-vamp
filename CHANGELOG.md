@@ -1,5 +1,295 @@
 # Changelog
 
+## Unreleased — vamp fork, Phase 7: debugger, axe, real Issues, recorder, local overrides
+
+Ships every item that was deferred from Phase 6. All tools are gated behind
+hidden `--experimental<Name>` flags (default off) — safer rollout pattern,
+mirrors `--experimentalCdpPassthrough`.
+
+### Debugger (`--experimentalDebugger`)
+
+13 tools backed by CDP `Debugger.*` and `DOMDebugger.*` domains:
+- `debugger_enable`, `set_breakpoint`, `remove_breakpoint`,
+  `list_breakpoints`, `set_xhr_breakpoint`, `set_dom_breakpoint`.
+- `pause`, `resume`, `step_over`, `step_into`, `step_out`.
+- `get_call_stack` (caches the most recent `Debugger.paused` event),
+  `get_scope_variables`, `evaluate_in_scope`.
+
+### axe-core a11y audits (`--experimentalAxe`)
+
+Adds `axe-core` as a runtime dependency (~600 KB minified):
+- `run_axe_audit({rules?, includeOnly?, exclude?, resultTypes?, runOnly?})` —
+  injects axe into the page on first call, runs structured audit.
+- `list_axe_rules({tag?})`, `get_axe_rule({ruleId})`.
+
+### Real Issues panel (`--experimentalIssues`)
+
+New `IssueAggregator` runtime class subscribing to CDP `Audits.issueAdded`
+events per page (lazy install, capped buffer, cleared on page close):
+- `list_issues({pageSize?, pageIdx?, types?})` (paginated).
+- `get_issue({issueId})`, `clear_issues`.
+
+### Recorder (`--experimentalRecorder`)
+
+New `RecorderManager` runtime class with explicit step recording. Exports
+to JSON / Puppeteer / Playwright:
+- `recorder_start({name})`, `recorder_record_step({type, payload?})`,
+  `recorder_stop({name, exportFormat?, filePath?})`.
+- `list_recordings`, `get_recording`.
+- `replay_recording({recordingPath})` — best-effort JSON replay through
+  the active page (selector-only steps that lack a selector are logged
+  and skipped).
+
+### Local overrides (`--experimentalLocalOverrides`)
+
+Builds on Phase 3's `NetworkInterceptionManager`:
+- `InterceptorRule` gains an additive `bodyFromPath` field — fulfill rules
+  read the response body lazily from disk on every match, so editing the
+  file takes effect without re-registering. Fully backward compatible.
+- `add_local_override({urlPattern, contentPath, contentType?, status?})`,
+  `list_overrides`, `remove_override`, `enable_overrides`,
+  `disable_overrides`.
+
+### New CLI flags (all hidden, default off)
+
+`--experimentalDebugger`, `--experimentalAxe`, `--experimentalIssues`,
+`--experimentalRecorder`, `--experimentalLocalOverrides`.
+
+## Unreleased — vamp fork, Phase 6 (partial): coverage, sensors/permissions, exports, DOM extras, multi-tab, lighthouse perf
+
+Phase 6 is the kitchen-sink phase from the original review. Ships the
+tools that are independently useful and have small, well-defined surfaces;
+defers the heavier subsystems (full debugger, axe-core integration, real
+Issues panel replacing FakeIssuesManager, recorder/replay, local
+overrides) for follow-up since each is its own substantial feature.
+
+### Coverage (new `COVERAGE` category, on by default)
+
+- `start_js_coverage`, `stop_js_coverage` (with `summaryOnly` for compact
+  per-URL byte usage), `start_css_coverage`, `stop_css_coverage`.
+
+### Sensors / permissions / accessibility (extends existing EMULATION)
+
+- `override_permissions({permissions[], origin?})`, `reset_permissions`.
+- `emulate_sensor({type, x?, y?, z?, alpha?, beta?, gamma?, illuminance?})`.
+- `emulate_idle_state`, `clear_idle_state_override`.
+- `emulate_vision_deficiency({type})` — achromatopsia, deuteranopia,
+  tritanopia, blurredVision, reducedContrast, etc.
+- `emulate_reduced_motion({enabled})`.
+
+### Page export (new `EXPORT` category, on by default)
+
+- `print_to_pdf` — full CDP `Page.printToPDF` surface (paper formats,
+  margins, header/footer templates, page ranges, scale).
+- `save_mhtml` — CDP `Page.captureSnapshot`.
+- `export_dom_html` — serialized `documentElement.outerHTML`.
+
+### DOM / layout extras (lives in DEBUGGING / INPUT)
+
+- `query_selector_all({selector, limit?})`.
+- `get_computed_styles({uid, properties?})`.
+- `get_box_model({uid})`, `scroll_into_view({uid, block?, inline?})`,
+  `get_layout_metrics`.
+
+### Multi-tab coordination
+
+- `broadcast_evaluate({expression, pageIds?, timeoutMs?})` — fans out the
+  same expression across every open page (or a filtered subset) with
+  per-page timeout.
+
+### Lighthouse performance opt-in
+
+- `lighthouse_audit` now accepts `categories: string[]` (default
+  `['accessibility', 'seo', 'best-practices']`). Pass `['performance']`
+  to enable the performance audit.
+
+### Deferred to Phase 7
+
+- Full debugger surface (breakpoints, stepping, scope inspection).
+- axe-core a11y audits.
+- Real `list_issues` (replacing `FakeIssuesManager`).
+- Recorder / replay.
+- Local overrides (file-backed response substitution).
+
+### New CLI flags
+
+`--categoryCoverage`, `--categoryExport`. Both default true with
+corresponding `--no-` opt-outs.
+
+## Unreleased — vamp fork, Phase 5: service worker / PWA tools
+
+Adds the on-by-default `SERVICE_WORKER` tool category with 9 tools that
+generalize the previous extension-only worker support to any page-attached
+worker, plus inspection/control surfaces for SW registrations and the
+web-app manifest.
+
+### New tools
+
+- `list_service_workers` — page-attached worker URLs.
+- `evaluate_in_worker({workerUrlSubstring, expression})` — run JS in any
+  page-attached worker; expression form so callers don't need to write
+  function literals.
+- `unregister_service_worker({scopeURL})`,
+  `update_service_worker({scopeURL})`, `skip_waiting({scopeURL})`,
+  `start_service_worker({scopeURL})`,
+  `stop_service_worker({versionId})`.
+- `get_manifest` — CDP `Page.getAppManifest`.
+- `trigger_background_sync({origin, serviceWorkerRegistrationId, tag})`.
+
+### New CLI flag
+
+`--categoryServiceWorker` (default true). Disable with
+`--no-categoryServiceWorker`.
+
+### Note
+
+Cross-target service workers (the common case for production sites) are
+not enumerable through Puppeteer's `Page.workers()` alone. For full
+cross-target enumeration, combine these tools with the Phase 4
+`cdp_subscribe('ServiceWorker.workerVersionUpdated')` after
+`cdp_send('ServiceWorker.enable')`.
+
+## Unreleased — vamp fork, Phase 4: raw CDP passthrough (experimental)
+
+The unblock-everything tool. Behind the new `--experimentalCdpPassthrough`
+flag (off by default), exposes 5 raw Chrome DevTools Protocol tools that
+let callers reach any CDP capability — including ones not yet wrapped by a
+bespoke MCP tool.
+
+### New tools (gated by `--experimentalCdpPassthrough`)
+
+- `cdp_send({method, params?})` — sends one CDP command to the active
+  page's session. Returns the raw JSON response.
+- `cdp_subscribe({event, bufferSize?})` — subscribe to a CDP event. Events
+  are buffered in a per-subscription ring buffer (default 1000). Returns
+  `subscriptionId`.
+- `cdp_poll({subscriptionId, maxEvents?})` — drain buffered events.
+- `cdp_unsubscribe({subscriptionId})`, `cdp_list_subscriptions`.
+
+### Safety
+
+A small allowlist of "dangerous" CDP methods (Browser.close,
+Browser.crash, Storage.clearDataForOrigin, Network.clearBrowserCache,
+Target.disposeBrowserContext, etc.) requires the additional
+`--experimentalCdpDangerous` flag, so a casual `cdp_send` cannot
+accidentally tear down the browser session.
+
+## Unreleased — vamp fork, Phase 3: network interception & HAR
+
+Adds the on-by-default `INTERCEPTION` tool category and supporting runtime
+infrastructure (`NetworkInterceptionManager`, `HarRecorder`).
+
+### New tools
+
+- `intercept_network({urlPattern, action, ...})` — register a persistent
+  interceptor with action `continue` / `abort` / `fulfill` / `modify`.
+- `list_interceptors`, `remove_interceptor`, `clear_interceptors`.
+- `mock_response({urlPattern, status?, headers?, body?, contentType?,
+  latencyMs?})` — convenience wrapper around `intercept_network` with
+  `action: fulfill`.
+- `modify_request_headers({urlPattern, setHeaders?, removeHeaders?})` —
+  convenience wrapper for header injection / stripping.
+- `block_urls({patterns, abortReason?})` — bulk block by URLPattern list.
+- `record_har_start({name, includeBodies?})`,
+  `record_har_stop({name, filePath?})`, `list_har_recordings`.
+
+### New CLI flag
+
+`--categoryInterception` (default true). Disable with
+`--no-categoryInterception`.
+
+### Architecture
+
+- `NetworkInterceptionManager` lives on `McpContext`. One Puppeteer
+  `request` listener per page; lazy install on first rule, removed on
+  the last. Rules walked in registration order; first match wins.
+- `HarRecorder` subscribes to `request` / `response` /
+  `requestfinished` / `requestfailed` and emits HAR 1.2. Optional body
+  capture (textual ≤ 1 MiB inline as utf-8, binary as base64).
+
+## Unreleased — vamp fork, Phase 2: storage tools
+
+Adds the on-by-default `STORAGE` tool category, covering capabilities that
+were previously inaccessible through this MCP. Disable with
+`--no-categoryStorage`.
+
+### New tools
+
+- `list_cookies({urls?})`, `set_cookie({name, value, url?, domain?, ...})`,
+  `delete_cookie({name, ...})`, `clear_cookies({origin?})`.
+- `get_local_storage`, `set_local_storage`, `clear_local_storage` (and
+  `*_session_storage` mirrors).
+- `list_indexeddb_databases`, `get_indexeddb_data` (paginated),
+  `delete_indexeddb_database`, `clear_indexeddb_object_store`.
+- `list_caches`, `get_cache_entries` (paginated), `delete_cache`,
+  `delete_cache_entry`.
+- `clear_all_storage({origin?, types?})` — wraps CDP
+  `Storage.clearDataForOrigin`.
+
+Cookies use the `BrowserContext`-level Puppeteer API (the page-level API is
+deprecated upstream); web storage uses `page.evaluate`; IndexedDB and
+CacheStorage go through CDP because Puppeteer doesn't expose them.
+
+## Unreleased — vamp fork, Phase 1: stability & correctness
+
+This release lays the groundwork for the multi-phase improvement plan in
+`docs/` by fixing architectural bottlenecks. No new tools yet — all changes
+are universal stability and bug fixes. Phases 2–6 (storage, network
+interception, CDP passthrough, service workers, debugger/coverage) follow in
+subsequent PRs.
+
+### Performance / concurrency
+
+* Per-page tool mutex (`MutexMap` keyed by page id). Different pages no
+  longer block each other; only operations on the same page serialize.
+* `Mutex.acquire()` now accepts `{timeoutMs, holderHint}` so a tool that
+  fails to release the lock surfaces as a `MutexAcquireTimeoutError` instead
+  of hanging indefinitely.
+* Snapshot caching on `McpPage`: `TextSnapshot` is reused unless the DOM
+  has been mutated since it was built (tracked via `framenavigated` and
+  `waitForEventsAfterAction` invalidation). New `forceRefresh` param on
+  `take_snapshot`.
+* `TextSnapshot` now exposes a `backendNodeId → node` index. Element
+  resolution (`McpPage.resolveCdpElementId`) is O(1) instead of BFS.
+* `HeapSnapshotManager` is now a bounded LRU (default 5 entries,
+  configurable via `--heapSnapshotCacheSize`) and disposes evicted workers.
+
+### Reliability
+
+* Daemon now captures the spawned MCP subprocess's stderr to a rotating log
+  at `<runtime-home>/mcp.log` (5 MiB rotation by default) instead of
+  silently discarding it.
+* Daemon watchdog: pings the MCP subprocess every 30 s; restarts the
+  subprocess if it misses 2 pings or its `tools/list` response times out.
+  Tunable via env vars `CHROME_DEVTOOLS_MCP_WATCHDOG_*`.
+* `UniverseManager.init` now caps total init time at 5 s. Failures degrade
+  to lazy on-demand creation rather than hanging server startup.
+* Performance trace history: `--traceHistoryLimit` (default 5) keeps the
+  last N traces in memory rather than clobbering on every recording.
+
+### Bug fixes
+
+* `take_screenshot` with `format: 'png'` and `quality` set now throws
+  instead of silently ignoring `quality`.
+* Snapshot UID reuse key now includes `frameId` so iframe reloads cannot
+  collide UIDs with the main frame.
+* `SnapshotFormatter` accepts a `maxNodes` cap (CLI: `--snapshotMaxNodes`,
+  default 5000) and emits a truncation marker for huge DOMs.
+* Page dialogs are now queued (`McpPage.pendingDialogCount()`) instead of
+  single-slot, so rapid bursts of alerts are not lost.
+* Renamed misspelled internal helper
+  `converNetworkRequestDetailedToStringDetailed` →
+  `convertNetworkRequestDetailedToStringDetailed`.
+
+### New CLI flags (all hidden, defaults preserve prior behavior)
+
+`--toolMutexTimeoutMs`, `--dragDelayMs`, `--fileChooserTimeoutMs`,
+`--fillCharMultiplierMs`, `--lighthouseMaxWaitMs`,
+`--slimNavigateTimeoutMs`, `--performanceAutoStopMs`,
+`--stackTraceTimeoutMs`, `--screenshotInlineLimitBytes`,
+`--consoleStackMaxFrames`, `--snapshotMaxNodes`, `--traceHistoryLimit`,
+`--heapSnapshotCacheSize`.
+
 ## [0.23.0](https://github.com/ChromeDevTools/chrome-devtools-mcp/compare/chrome-devtools-mcp-v0.22.0...chrome-devtools-mcp-v0.23.0) (2026-04-22)
 
 

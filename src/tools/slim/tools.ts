@@ -44,11 +44,12 @@ export const navigate = definePageTool({
     url: zod.string().describe('URL to navigate to'),
   },
   blockedByDialog: false,
-  handler: async (request, response) => {
+  handler: async (request, response, context) => {
     const page = request.page;
 
+    // Phase 1.6: configurable via --slimNavigateTimeoutMs (default 30000).
     const options = {
-      timeout: 30_000,
+      timeout: context.getTuning().slimNavigateTimeoutMs,
     };
 
     const dialogHandler = (dialog: Dialog) => {

@@ -190,6 +190,55 @@ export const cliOptions = {
     describe: 'Whether to enable interoperability tools',
     hidden: true,
   },
+  experimentalCdpPassthrough: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 4 (experimental): expose `cdp_send`, `cdp_subscribe`, `cdp_poll`, `cdp_unsubscribe`, `cdp_list_subscriptions` for raw Chrome DevTools Protocol access. Off by default — these tools are powerful and unfiltered.',
+  },
+  experimentalCdpDangerous: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 4 (experimental): permit a small allowlist of "dangerous" CDP methods (Browser.close, Target.disposeBrowserContext, Storage.clearDataForOrigin, etc.) via `cdp_send`. Requires --experimentalCdpPassthrough.',
+  },
+  experimentalDebugger: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable JS debugger tools (set_breakpoint, pause, step_*, get_call_stack, get_scope_variables, evaluate_in_scope, set_xhr_breakpoint, set_dom_breakpoint).',
+  },
+  experimentalAxe: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable axe-core a11y audit tools (run_axe_audit, list_axe_rules, get_axe_rule). Requires the axe-core runtime dependency.',
+  },
+  experimentalIssues: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable real DevTools Issues panel tools (list_issues, get_issue, clear_issues), backed by `Audits.issueAdded` events instead of the legacy FakeIssuesManager.',
+  },
+  experimentalRecorder: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable user-action recorder tools (recorder_start, recorder_stop, list_recordings, get_recording, replay_recording).',
+  },
+  experimentalLocalOverrides: {
+    type: 'boolean',
+    hidden: true,
+    default: false,
+    describe:
+      'Phase 7 (experimental): enable file-backed local override tools (add_local_override, list_overrides, remove_override, enable_overrides, disable_overrides).',
+  },
   experimentalScreencast: {
     type: 'boolean',
     describe:
@@ -244,6 +293,36 @@ export const cliOptions = {
     describe:
       'Set to true to enable tools exposed by the inspected page itself',
   },
+  categoryStorage: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable storage tools (cookies, localStorage, sessionStorage, IndexedDB, CacheStorage). Default true.',
+  },
+  categoryInterception: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable network interception tools (intercept_network, mock_response, modify_request_headers, block_urls, record_har_*). Default true.',
+  },
+  categoryServiceWorker: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable service worker / PWA tools (list_service_workers, evaluate_in_worker, unregister_service_worker, update_service_worker, skip_waiting, get_manifest, trigger_background_sync). Default true.',
+  },
+  categoryCoverage: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable JS/CSS coverage tools (start_js_coverage, stop_js_coverage, start_css_coverage, stop_css_coverage). Default true.',
+  },
+  categoryExport: {
+    type: 'boolean',
+    default: true,
+    describe:
+      'Set to false to disable page export tools (print_to_pdf, save_mhtml, export_dom_html). Default true.',
+  },
   performanceCrux: {
     type: 'boolean',
     default: true,
@@ -287,6 +366,96 @@ export const cliOptions = {
     describe:
       'If true, redacts some of the network headers considered senstive before returning to the client.',
     default: false,
+  },
+  toolMutexTimeoutMs: {
+    type: 'number',
+    default: 0,
+    hidden: true,
+    describe:
+      'Per-page tool mutex acquire timeout in milliseconds. 0 disables the timeout (default). When set, a tool that has been waiting longer than this for the lock will fail with MutexAcquireTimeoutError instead of hanging.',
+  },
+  dragDelayMs: {
+    type: 'number',
+    default: 50,
+    hidden: true,
+    describe:
+      'Delay between drag and drop steps in `drag` tool, in milliseconds.',
+  },
+  fileChooserTimeoutMs: {
+    type: 'number',
+    default: 3000,
+    hidden: true,
+    describe:
+      'Maximum time to wait for a file chooser dialog in `upload_file` tool, in milliseconds.',
+  },
+  fillCharMultiplierMs: {
+    type: 'number',
+    default: 10,
+    hidden: true,
+    describe:
+      'Per-character timeout multiplier added to the base fill timeout in `fill` and `fill_form` tools, in milliseconds.',
+  },
+  lighthouseMaxWaitMs: {
+    type: 'number',
+    default: 30000,
+    hidden: true,
+    describe:
+      'Maximum time Lighthouse waits for the page to load before failing the audit, in milliseconds.',
+  },
+  slimNavigateTimeoutMs: {
+    type: 'number',
+    default: 30000,
+    hidden: true,
+    describe:
+      'Navigation timeout used by the slim-mode `navigate` tool, in milliseconds.',
+  },
+  performanceAutoStopMs: {
+    type: 'number',
+    default: 5000,
+    hidden: true,
+    describe:
+      'Auto-stop delay after `performance_start_trace` when autoStop=true, in milliseconds.',
+  },
+  stackTraceTimeoutMs: {
+    type: 'number',
+    default: 1000,
+    hidden: true,
+    describe:
+      'Timeout for waiting on script availability when symbolicating stack traces, in milliseconds.',
+  },
+  screenshotInlineLimitBytes: {
+    type: 'number',
+    default: 2 * 1024 * 1024,
+    hidden: true,
+    describe:
+      'Screenshots larger than this are written to a temp file instead of being inlined in the response. Default 2 MiB.',
+  },
+  consoleStackMaxFrames: {
+    type: 'number',
+    default: 50,
+    hidden: true,
+    describe: 'Maximum number of stack frames included in console messages.',
+  },
+  snapshotMaxNodes: {
+    type: 'number',
+    default: 5000,
+    hidden: true,
+    describe:
+      'Maximum nodes included in a text snapshot. Excess nodes are truncated to prevent memory blow-ups on huge DOMs.',
+  },
+  traceHistoryLimit: {
+    type: 'number',
+    default: 5,
+    hidden: true,
+    describe:
+      'Number of recent performance traces to keep in memory for `performance_analyze_insight`.',
+  },
+  heapSnapshotCacheSize: {
+    type: 'number',
+    default: 5,
+    hidden: true,
+    describe:
+      'Maximum number of heap snapshots kept in the in-memory LRU cache. Older snapshots are evicted and their workers disposed.',
   },
 } satisfies Record<string, YargsOptions>;
 

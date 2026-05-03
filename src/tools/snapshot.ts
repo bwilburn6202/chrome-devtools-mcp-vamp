@@ -32,6 +32,12 @@ in the DevTools Elements panel (if any).`,
       .describe(
         'The absolute path, or a path relative to the current working directory, to save the snapshot to instead of attaching it to the response.',
       ),
+    forceRefresh: zod
+      .boolean()
+      .optional()
+      .describe(
+        'When true, ignore any cached snapshot and rebuild from scratch. Default false; the cached snapshot is reused when no DOM mutation has been observed since it was built.',
+      ),
   },
   blockedByDialog: true,
   handler: async (request, response, context) => {
@@ -39,6 +45,7 @@ in the DevTools Elements panel (if any).`,
     response.includeSnapshot({
       verbose: request.params.verbose ?? false,
       filePath: request.params.filePath,
+      forceRefresh: request.params.forceRefresh,
     });
   },
 });

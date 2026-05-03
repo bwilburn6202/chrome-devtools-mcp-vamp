@@ -23,6 +23,262 @@ export type Commands = Record<
   }
 >;
 export const commands: Commands = {
+  add_local_override: {
+    description:
+      "Register a local override: requests matching urlPattern are fulfilled with the contents of `contentPath` on disk. The file is re-read on every match so editing the file takes effect without re-registering.\n\nReturns the new `overrideId`. Wraps Phase 3's `intercept_network` with `action: fulfill` + `bodyFromPath`. (requires flag: --experimentalLocalOverrides=true)",
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description: 'URLPattern to match (e.g. `https://example.com/api/*`).',
+        required: true,
+      },
+      contentPath: {
+        name: 'contentPath',
+        type: 'string',
+        description:
+          'Absolute path to the file whose contents serve the response.',
+        required: true,
+      },
+      contentType: {
+        name: 'contentType',
+        type: 'string',
+        description:
+          'Response Content-Type. If omitted, no content-type header is set.',
+        required: false,
+      },
+      status: {
+        name: 'status',
+        type: 'integer',
+        description: 'Response status code. Default 200.',
+        required: false,
+      },
+    },
+  },
+  block_urls: {
+    description:
+      'Block requests matching any of the provided URLPattern strings. Convenience wrapper around `intercept_network` with `action: abort`.',
+    category: 'Network interception',
+    args: {
+      patterns: {
+        name: 'patterns',
+        type: 'array',
+        description: '',
+        required: true,
+      },
+      abortReason: {
+        name: 'abortReason',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  broadcast_evaluate: {
+    description:
+      'Run the same JavaScript expression in every open page (or a filtered subset) and aggregate the results. Useful for cross-tab queries (e.g. "find all pages where the user is logged in").',
+    category: 'Navigation automation',
+    args: {
+      expression: {
+        name: 'expression',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      pageIds: {
+        name: 'pageIds',
+        type: 'array',
+        description:
+          'Restrict broadcast to these page ids. Default: every open page.',
+        required: false,
+      },
+      timeoutMs: {
+        name: 'timeoutMs',
+        type: 'integer',
+        description: 'Per-page timeout. Default 5000.',
+        required: false,
+      },
+    },
+  },
+  cdp_list_subscriptions: {
+    description:
+      'List active CDP event subscriptions. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  cdp_poll: {
+    description:
+      'Drain buffered events for a CDP subscription created via `cdp_subscribe`. Returns the events accumulated since the last poll and clears the buffer. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      subscriptionId: {
+        name: 'subscriptionId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      maxEvents: {
+        name: 'maxEvents',
+        type: 'integer',
+        description:
+          'Cap on events returned this poll. Default: drain everything.',
+        required: false,
+      },
+    },
+  },
+  cdp_send: {
+    description:
+      'Send a raw Chrome DevTools Protocol command to the active page\'s CDP session.\n\nReturns the raw JSON response. Use this when no bespoke MCP tool exists for the capability you need (e.g. "Page.printToPDF", "Debugger.setBreakpointByUrl", "Animation.getPlaybackRate"). Reference: https://chromedevtools.github.io/devtools-protocol/ (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      method: {
+        name: 'method',
+        type: 'string',
+        description:
+          'CDP method, e.g. "Runtime.evaluate", "Page.captureScreenshot".',
+        required: true,
+      },
+      params: {
+        name: 'params',
+        type: 'object',
+        description: 'CDP parameters object. Default {}.',
+        required: false,
+      },
+    },
+  },
+  cdp_subscribe: {
+    description:
+      'Subscribe to a raw CDP event for the active page. Returns a `subscriptionId`.\n\nEvents are buffered (ring buffer, default 1000 entries). Poll with `cdp_poll` to drain. The subscription persists until `cdp_unsubscribe` is called or the page closes. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      event: {
+        name: 'event',
+        type: 'string',
+        description: 'CDP event name, e.g. "Network.requestWillBeSent".',
+        required: true,
+      },
+      bufferSize: {
+        name: 'bufferSize',
+        type: 'integer',
+        description: 'Ring buffer capacity. Default 1000.',
+        required: false,
+      },
+    },
+  },
+  cdp_unsubscribe: {
+    description:
+      'Remove a CDP event subscription created via `cdp_subscribe`. (requires flag: --experimentalCdpPassthrough=true)',
+    category: 'Debugging',
+    args: {
+      subscriptionId: {
+        name: 'subscriptionId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  clear_all_storage: {
+    description:
+      'Clears one or more storage types for an origin via CDP `Storage.clearDataForOrigin`. Default: all storage types for the active page origin.',
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      types: {
+        name: 'types',
+        type: 'array',
+        description:
+          'Storage types to clear. If omitted, clears `all`. Common values: cookies, indexeddb, local_storage, cache_storage, service_workers.',
+        required: false,
+      },
+    },
+  },
+  clear_cookies: {
+    description:
+      "Clears all cookies for the active page's origin (or a provided origin) via CDP `Storage.clearDataForOrigin`.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description:
+          'Origin to clear cookies for. Default: current page origin.',
+        required: false,
+      },
+    },
+  },
+  clear_idle_state_override: {
+    description: 'Clear the IdleDetector override.',
+    category: 'Emulation',
+    args: {},
+  },
+  clear_indexeddb_object_store: {
+    description: 'Clears all entries from an IndexedDB object store.',
+    category: 'Storage',
+    args: {
+      database: {
+        name: 'database',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      objectStore: {
+        name: 'objectStore',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  clear_interceptors: {
+    description: 'Removes all interceptors for the current page.',
+    category: 'Network interception',
+    args: {},
+  },
+  clear_issues: {
+    description:
+      'Clears the issue buffer for the active page. The aggregator stays enabled — subsequent issues will be captured. (requires flag: --experimentalIssues=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  clear_local_storage: {
+    description:
+      "Clears localStorage on the active page's origin. If `key` is provided, removes only that key; otherwise removes everything.",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  clear_session_storage: {
+    description:
+      "Clears sessionStorage on the active page's origin (or a single key).",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   click: {
     description: 'Clicks on the provided element',
     category: 'Input automation',
@@ -94,6 +350,98 @@ export const commands: Commands = {
         required: true,
       },
     },
+  },
+  debugger_enable: {
+    description:
+      'Enables CDP `Debugger.*` domain on the active page. Idempotent. Required before any other debugger tool runs. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  delete_cache: {
+    description: 'Deletes a CacheStorage cache by cacheId.',
+    category: 'Storage',
+    args: {
+      cacheId: {
+        name: 'cacheId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  delete_cache_entry: {
+    description:
+      'Deletes a single entry (request URL) from a CacheStorage cache.',
+    category: 'Storage',
+    args: {
+      cacheId: {
+        name: 'cacheId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      request: {
+        name: 'request',
+        type: 'string',
+        description: 'Request URL to remove from the cache.',
+        required: true,
+      },
+    },
+  },
+  delete_cookie: {
+    description:
+      'Deletes a single cookie matching the given filter from the active browser context.',
+    category: 'Storage',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: 'Cookie name.',
+        required: true,
+      },
+      domain: {
+        name: 'domain',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      path: {
+        name: 'path',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      url: {
+        name: 'url',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  delete_indexeddb_database: {
+    description: 'Deletes an IndexedDB database for the given origin.',
+    category: 'Storage',
+    args: {
+      database: {
+        name: 'database',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  disable_overrides: {
+    description:
+      'Temporarily disables every override for the current page (the underlying interceptor rules are removed). Definitions are kept; call `enable_overrides` to re-register. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {},
   },
   drag: {
     description: 'Drag an element onto another element',
@@ -169,6 +517,184 @@ export const commands: Commands = {
       },
     },
   },
+  emulate_idle_state: {
+    description:
+      'Override the IdleDetector state (CDP `Emulation.setIdleOverride`).',
+    category: 'Emulation',
+    args: {
+      isUserActive: {
+        name: 'isUserActive',
+        type: 'boolean',
+        description: '',
+        required: true,
+      },
+      isScreenUnlocked: {
+        name: 'isScreenUnlocked',
+        type: 'boolean',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  emulate_reduced_motion: {
+    description:
+      'Emulate `prefers-reduced-motion: reduce` via media-feature override.',
+    category: 'Emulation',
+    args: {
+      enabled: {
+        name: 'enabled',
+        type: 'boolean',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  emulate_sensor: {
+    description:
+      'Override readings for a Web Sensor API sensor (CDP `Emulation.setSensorOverrideEnabled` + `setSensorOverrideReadings`).',
+    category: 'Emulation',
+    args: {
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: [
+          'absolute-orientation',
+          'accelerometer',
+          'ambient-light',
+          'gravity',
+          'gyroscope',
+          'linear-acceleration',
+          'magnetometer',
+          'proximity',
+          'relative-orientation',
+        ],
+      },
+      enabled: {
+        name: 'enabled',
+        type: 'boolean',
+        description: 'Default true. Pass false to disable the override.',
+        required: false,
+      },
+      x: {
+        name: 'x',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      y: {
+        name: 'y',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      z: {
+        name: 'z',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      alpha: {
+        name: 'alpha',
+        type: 'number',
+        description: 'For orientation sensors (degrees).',
+        required: false,
+      },
+      beta: {
+        name: 'beta',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      gamma: {
+        name: 'gamma',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      illuminance: {
+        name: 'illuminance',
+        type: 'number',
+        description: 'Lux, for ambient-light.',
+        required: false,
+      },
+    },
+  },
+  emulate_vision_deficiency: {
+    description:
+      'Emulate a CSS vision deficiency for accessibility testing (CDP `Emulation.setEmulatedVisionDeficiency`).',
+    category: 'Emulation',
+    args: {
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: [
+          'none',
+          'achromatopsia',
+          'blurredVision',
+          'deuteranopia',
+          'protanopia',
+          'tritanopia',
+          'reducedContrast',
+        ],
+      },
+    },
+  },
+  enable_overrides: {
+    description:
+      'Re-registers every override that was disabled by `disable_overrides`. New interceptorIds are issued. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {},
+  },
+  evaluate_in_scope: {
+    description:
+      'Evaluate an expression in the context of a paused call frame (CDP `Debugger.evaluateOnCallFrame`). (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      callFrameId: {
+        name: 'callFrameId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      expression: {
+        name: 'expression',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      returnByValue: {
+        name: 'returnByValue',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  evaluate_in_worker: {
+    description:
+      'Evaluates a JavaScript expression inside a service worker. The worker is identified by a substring of its URL (e.g. "sw.js" or "/service-worker.js").\n\nThe script is run as an expression. Use `evaluate_script` for page contexts; this tool exists for SW debugging (`caches.keys()`, `self.registration.update()`, etc.).',
+    category: 'Service workers / PWA',
+    args: {
+      workerUrlSubstring: {
+        name: 'workerUrlSubstring',
+        type: 'string',
+        description:
+          'Substring matched against worker URLs. The first matching worker is used.',
+        required: true,
+      },
+      expression: {
+        name: 'expression',
+        type: 'string',
+        description:
+          'JavaScript expression to evaluate in the worker. Async expressions resolved.',
+        required: true,
+      },
+    },
+  },
   evaluate_script: {
     description:
       'Evaluate a JavaScript function inside the currently selected page. Returns the response as JSON,\nso returned values have to be JSON-serializable.',
@@ -216,6 +742,19 @@ export const commands: Commands = {
       },
     },
   },
+  export_dom_html: {
+    description:
+      "Save the active page's serialized DOM (document.documentElement.outerHTML).",
+    category: 'Page export',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   fill: {
     description:
       'Type text into an input, text area or select an option from a <select> element.',
@@ -243,6 +782,89 @@ export const commands: Commands = {
       },
     },
   },
+  get_axe_rule: {
+    description:
+      'Returns details for a single axe-core rule by id (description, help, helpUrl, tags). (requires flag: --experimentalAxe=true)',
+    category: 'Debugging',
+    args: {
+      ruleId: {
+        name: 'ruleId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  get_box_model: {
+    description:
+      'Returns the box model (content/padding/border/margin quads, plus width/height) for an element by uid.',
+    category: 'Debugging',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  get_cache_entries: {
+    description:
+      'Returns entries (URL + response metadata) for a single cache. Paginated.',
+    category: 'Storage',
+    args: {
+      cacheId: {
+        name: 'cacheId',
+        type: 'string',
+        description: 'cacheId obtained from `list_caches`.',
+        required: true,
+      },
+      pageSize: {
+        name: 'pageSize',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pageIdx: {
+        name: 'pageIdx',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pathFilter: {
+        name: 'pathFilter',
+        type: 'string',
+        description: 'Optional substring filter on request URL path.',
+        required: false,
+      },
+    },
+  },
+  get_call_stack: {
+    description:
+      'Returns the call stack from the most recent `Debugger.paused` event. Empty if not paused. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  get_computed_styles: {
+    description:
+      'Returns a subset of `getComputedStyle` for an element identified by uid. Filter to a property list to avoid the full dump.',
+    category: 'Debugging',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      properties: {
+        name: 'properties',
+        type: 'array',
+        description:
+          'Property names to return (e.g. ["display", "color"]). If omitted, returns the full computed style object — large.',
+        required: false,
+      },
+    },
+  },
   get_console_message: {
     description:
       'Gets a console message by its ID. You can get all messages by calling list_console_messages.',
@@ -256,6 +878,89 @@ export const commands: Commands = {
         required: true,
       },
     },
+  },
+  get_indexeddb_data: {
+    description:
+      'Returns entries from an IndexedDB object store. Paginated via pageSize/pageIdx.',
+    category: 'Storage',
+    args: {
+      database: {
+        name: 'database',
+        type: 'string',
+        description: 'Database name.',
+        required: true,
+      },
+      objectStore: {
+        name: 'objectStore',
+        type: 'string',
+        description: 'Object store name.',
+        required: true,
+      },
+      indexName: {
+        name: 'indexName',
+        type: 'string',
+        description:
+          'Optional index name. If omitted, queries the primary key.',
+        required: false,
+      },
+      pageSize: {
+        name: 'pageSize',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pageIdx: {
+        name: 'pageIdx',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  get_issue: {
+    description:
+      'Returns the full details for a single issue by id (from `list_issues`). (requires flag: --experimentalIssues=true)',
+    category: 'Debugging',
+    args: {
+      issueId: {
+        name: 'issueId',
+        type: 'integer',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  get_layout_metrics: {
+    description:
+      'Returns viewport, content, and visual viewport metrics for the active page (CDP `Page.getLayoutMetrics`).',
+    category: 'Debugging',
+    args: {},
+  },
+  get_local_storage: {
+    description:
+      "Returns all localStorage entries for the active page's origin.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description:
+          'Informational only — the page is not navigated. Default: page origin.',
+        required: false,
+      },
+    },
+  },
+  get_manifest: {
+    description:
+      "Returns the active page's web app manifest (CDP `Page.getAppManifest`). Includes the manifest URL, parsed errors, and raw text.",
+    category: 'Service workers / PWA',
+    args: {},
   },
   get_memory_snapshot_details: {
     description:
@@ -342,6 +1047,58 @@ export const commands: Commands = {
       },
     },
   },
+  get_recording: {
+    description:
+      'Peek at an active recording without stopping it. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      exportFormat: {
+        name: 'exportFormat',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['json', 'puppeteer', 'playwright'],
+      },
+    },
+  },
+  get_scope_variables: {
+    description:
+      'Return the properties of a scope object from the current paused call stack. Use `get_call_stack` first to find callFrameId / scopeIndex. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      callFrameId: {
+        name: 'callFrameId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      scopeIndex: {
+        name: 'scopeIndex',
+        type: 'integer',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  get_session_storage: {
+    description:
+      "Returns all sessionStorage entries for the active page's origin.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   handle_dialog: {
     description:
       'If a browser dialog was opened, use this command to handle it',
@@ -395,9 +1152,94 @@ export const commands: Commands = {
       },
     },
   },
+  intercept_network: {
+    description:
+      'Register a persistent request interceptor for the current page.\n\nReturns the new `interceptorId`. Rules are evaluated in registration order; the first matching rule wins. Use `mock_response`, `block_urls`, or `modify_request_headers` for common cases — they are convenience wrappers around this tool.',
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description:
+          'URLPattern to match (e.g. `https://api.example.com/*` or `*://*/static/*`).',
+        required: true,
+      },
+      action: {
+        name: 'action',
+        type: 'string',
+        description:
+          '`continue` (no-op pass through), `abort` (block), `fulfill` (mock response), or `modify` (header / method / body overrides on the outgoing request).',
+        required: true,
+        enum: ['continue', 'abort', 'fulfill', 'modify'],
+      },
+      abortReason: {
+        name: 'abortReason',
+        type: 'string',
+        description: 'For `abort`. Default `blockedbyclient`.',
+        required: false,
+      },
+      status: {
+        name: 'status',
+        type: 'integer',
+        description: 'For `fulfill`. Default 200.',
+        required: false,
+      },
+      headers: {
+        name: 'headers',
+        type: 'object',
+        description: 'For `fulfill`. Response headers.',
+        required: false,
+      },
+      body: {
+        name: 'body',
+        type: 'string',
+        description: 'For `fulfill`. Response body.',
+        required: false,
+      },
+      contentType: {
+        name: 'contentType',
+        type: 'string',
+        description:
+          'For `fulfill`. Convenience for the `Content-Type` header.',
+        required: false,
+      },
+      latencyMs: {
+        name: 'latencyMs',
+        type: 'integer',
+        description: 'Artificial delay before the response is delivered.',
+        required: false,
+      },
+      setHeaders: {
+        name: 'setHeaders',
+        type: 'object',
+        description:
+          'For `modify`. Headers to set/override on the outgoing request.',
+        required: false,
+      },
+      removeHeaders: {
+        name: 'removeHeaders',
+        type: 'array',
+        description:
+          'For `modify`. Header names to drop from the outgoing request.',
+        required: false,
+      },
+      method: {
+        name: 'method',
+        type: 'string',
+        description: 'For `modify`. Override HTTP method.',
+        required: false,
+      },
+      postData: {
+        name: 'postData',
+        type: 'string',
+        description: 'For `modify`. Override outgoing request body.',
+        required: false,
+      },
+    },
+  },
   lighthouse_audit: {
     description:
-      'Get Lighthouse score and reports for accessibility, SEO, best practices, and agentic browsing. This excludes performance. For performance audits, run performance_start_trace',
+      "Get Lighthouse score and reports. By default audits accessibility, SEO, best practices, and agentic browsing. Pass `categories` to include other audits — pass `['performance']` for the performance audit (or use performance_start_trace for trace-level analysis).",
     category: 'Debugging',
     args: {
       mode: {
@@ -421,6 +1263,45 @@ export const commands: Commands = {
         name: 'outputDirPath',
         type: 'string',
         description: 'Directory for reports. If omitted, uses temporary files.',
+        required: false,
+      },
+      categories: {
+        name: 'categories',
+        type: 'array',
+        description:
+          "Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices', 'agentic-browsing'].",
+        required: false,
+      },
+    },
+  },
+  list_axe_rules: {
+    description:
+      "Returns axe-core's built-in rule catalog (id, tags, impact, description, help, helpUrl). Use to pick targeted rules for `run_axe_audit`. (requires flag: --experimentalAxe=true)",
+    category: 'Debugging',
+    args: {
+      tag: {
+        name: 'tag',
+        type: 'string',
+        description:
+          'Optional tag filter (e.g. "wcag2a", "best-practice", "section508").',
+        required: false,
+      },
+    },
+  },
+  list_breakpoints: {
+    description:
+      'Lists all currently-registered breakpoints for the active page. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  list_caches: {
+    description: 'Lists CacheStorage caches accessible from the active page.',
+    category: 'Storage',
+    args: {
+      securityOrigin: {
+        name: 'securityOrigin',
+        type: 'string',
+        description: '',
         required: false,
       },
     },
@@ -461,11 +1342,73 @@ export const commands: Commands = {
       },
     },
   },
+  list_cookies: {
+    description:
+      'Lists cookies for the active browser context. Optionally filter by URL(s); without a filter, returns all cookies in the active browser context.',
+    category: 'Storage',
+    args: {
+      urls: {
+        name: 'urls',
+        type: 'array',
+        description:
+          'Optional list of URLs to filter cookies by. Cookies whose domain/path match any URL are returned. Default: all cookies.',
+        required: false,
+      },
+    },
+  },
   list_extensions: {
     description:
       'Lists all the Chrome extensions installed in the browser. This includes their name, ID, version, and enabled status. (requires flag: --categoryExtensions=true)',
     category: 'Extensions',
     args: {},
+  },
+  list_har_recordings: {
+    description: 'Lists in-progress HAR recordings.',
+    category: 'Network interception',
+    args: {},
+  },
+  list_indexeddb_databases: {
+    description: "Lists IndexedDB database names for the active page's origin.",
+    category: 'Storage',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  list_interceptors: {
+    description: 'Lists all active network interceptors for the current page.',
+    category: 'Network interception',
+    args: {},
+  },
+  list_issues: {
+    description:
+      "Returns DevTools issues (CSP, mixed content, cookies, low-contrast, deprecation, …) collected from `Audits.issueAdded` events for the active page.\n\nThe first call enables the Audits domain on the page; subsequent calls return whatever's been buffered since. (requires flag: --experimentalIssues=true)",
+    category: 'Debugging',
+    args: {
+      pageSize: {
+        name: 'pageSize',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      pageIdx: {
+        name: 'pageIdx',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      types: {
+        name: 'types',
+        type: 'array',
+        description:
+          'Filter by issue code (e.g. "ContentSecurityPolicyIssue", "MixedContentIssue"). If omitted, all issues are returned.',
+        required: false,
+      },
+    },
   },
   list_network_requests: {
     description:
@@ -503,9 +1446,27 @@ export const commands: Commands = {
       },
     },
   },
+  list_overrides: {
+    description:
+      'Lists all registered local overrides for the current page. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {},
+  },
   list_pages: {
     description: 'Get a list of pages open in the browser.',
     category: 'Navigation automation',
+    args: {},
+  },
+  list_recordings: {
+    description:
+      'Lists all active recordings. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {},
+  },
+  list_service_workers: {
+    description:
+      "Lists active service workers visible to the current page's browser context (URLs and target IDs). Includes any web workers attached via `Page.workers()` for completeness.",
+    category: 'Service workers / PWA',
     args: {},
   },
   list_webmcp_tools: {
@@ -524,6 +1485,74 @@ export const commands: Commands = {
         type: 'string',
         description: 'A path to a .heapsnapshot file to read.',
         required: true,
+      },
+    },
+  },
+  mock_response: {
+    description:
+      'Convenience wrapper around `intercept_network` with `action: fulfill`. Returns the registered interceptorId.',
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      status: {
+        name: 'status',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      headers: {
+        name: 'headers',
+        type: 'object',
+        description: '',
+        required: false,
+      },
+      body: {
+        name: 'body',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      contentType: {
+        name: 'contentType',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      latencyMs: {
+        name: 'latencyMs',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  modify_request_headers: {
+    description:
+      'Convenience wrapper around `intercept_network` with `action: modify`. Sets and/or removes headers on outgoing requests matching urlPattern.',
+    category: 'Network interception',
+    args: {
+      urlPattern: {
+        name: 'urlPattern',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      setHeaders: {
+        name: 'setHeaders',
+        type: 'object',
+        description: '',
+        required: false,
+      },
+      removeHeaders: {
+        name: 'removeHeaders',
+        type: 'array',
+        description: '',
+        required: false,
       },
     },
   },
@@ -609,6 +1638,31 @@ export const commands: Commands = {
         required: false,
       },
     },
+  },
+  override_permissions: {
+    description:
+      "Grants the listed permissions for the active page's origin. Until reset, the browser auto-grants these without prompting.",
+    category: 'Emulation',
+    args: {
+      permissions: {
+        name: 'permissions',
+        type: 'array',
+        description: 'Permissions to grant.',
+        required: true,
+      },
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: 'Origin to grant for. Default: current page origin.',
+        required: false,
+      },
+    },
+  },
+  pause: {
+    description:
+      'Force the JS debugger to pause at the next statement. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
   },
   performance_analyze_insight: {
     description:
@@ -696,6 +1750,241 @@ export const commands: Commands = {
       },
     },
   },
+  print_to_pdf: {
+    description:
+      'Export the active page as a PDF (CDP `Page.printToPDF`). Returns the saved file path.',
+    category: 'Page export',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: 'Output path. Defaults to a temp file.',
+        required: false,
+      },
+      landscape: {
+        name: 'landscape',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+      printBackground: {
+        name: 'printBackground',
+        type: 'boolean',
+        description: 'Include background colors / images. Default true.',
+        required: false,
+      },
+      paperFormat: {
+        name: 'paperFormat',
+        type: 'string',
+        description:
+          'Standard paper size. Mutually exclusive with width/height.',
+        required: false,
+        enum: [
+          'letter',
+          'legal',
+          'tabloid',
+          'ledger',
+          'a0',
+          'a1',
+          'a2',
+          'a3',
+          'a4',
+          'a5',
+          'a6',
+        ],
+      },
+      width: {
+        name: 'width',
+        type: 'string',
+        description: 'e.g. "8.5in", "210mm".',
+        required: false,
+      },
+      height: {
+        name: 'height',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginTop: {
+        name: 'marginTop',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginRight: {
+        name: 'marginRight',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginBottom: {
+        name: 'marginBottom',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      marginLeft: {
+        name: 'marginLeft',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      scale: {
+        name: 'scale',
+        type: 'number',
+        description: '',
+        required: false,
+      },
+      pageRanges: {
+        name: 'pageRanges',
+        type: 'string',
+        description: 'e.g. "1-3,5". Default: all pages.',
+        required: false,
+      },
+      headerTemplate: {
+        name: 'headerTemplate',
+        type: 'string',
+        description:
+          'HTML for header. Use classes `date title url pageNumber totalPages`.',
+        required: false,
+      },
+      footerTemplate: {
+        name: 'footerTemplate',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  query_selector_all: {
+    description:
+      'Returns matches for a CSS selector on the active page. Each match includes the snapshot uid (if the element is part of the current a11y snapshot), tagName, and a brief text excerpt. Useful for narrowing element targets before `click` / `fill`.',
+    category: 'Debugging',
+    args: {
+      selector: {
+        name: 'selector',
+        type: 'string',
+        description: 'CSS selector.',
+        required: true,
+      },
+      limit: {
+        name: 'limit',
+        type: 'integer',
+        description: 'Default 50.',
+        required: false,
+      },
+    },
+  },
+  record_har_start: {
+    description:
+      'Begin recording a HAR for the current page. Use `record_har_stop` (with the same `name`) to end the recording and get the HAR contents or write a file.',
+    category: 'Network interception',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description:
+          'Logical name for this recording. Pass the same name to `record_har_stop`.',
+        required: true,
+      },
+      includeBodies: {
+        name: 'includeBodies',
+        type: 'boolean',
+        description:
+          'When true, response bodies up to 1 MiB are included in the HAR (utf-8 if textual, base64 otherwise).',
+        required: false,
+      },
+    },
+  },
+  record_har_stop: {
+    description:
+      'Stops a HAR recording started with `record_har_start`. Either writes to `filePath` (with `.har` extension auto-applied) or returns the HAR JSON inline.',
+    category: 'Network interception',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description:
+          'Optional output path. If omitted, the HAR is returned inline.',
+        required: false,
+      },
+    },
+  },
+  recorder_record_step: {
+    description:
+      'Append a step to all active recordings. Use this from the orchestrator (LLM) before / after invoking input tools to build a replayable script.\n\nThe free-form `payload` field carries the per-step parameters (e.g. {url} for navigate, {selector, value} for fill). The receiving recordings preserve it verbatim. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: [
+          'navigate',
+          'click',
+          'fill',
+          'press_key',
+          'type_text',
+          'drag',
+          'upload_file',
+          'wait_for',
+          'custom',
+        ],
+      },
+      payload: {
+        name: 'payload',
+        type: 'object',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  recorder_start: {
+    description:
+      'Begin a new in-memory user-action recording. Multiple recordings can be active at once (keyed by `name`). (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  recorder_stop: {
+    description:
+      'Stop a recording and return / save it. Supported export formats: `json`, `puppeteer`, `playwright`. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      exportFormat: {
+        name: 'exportFormat',
+        type: 'string',
+        description: 'Default `json`.',
+        required: false,
+        enum: ['json', 'puppeteer', 'playwright'],
+      },
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
   reload_extension: {
     description:
       'Reloads an unpacked Chrome extension by its ID. (requires flag: --categoryExtensions=true)',
@@ -708,6 +1997,63 @@ export const commands: Commands = {
         required: true,
       },
     },
+  },
+  remove_breakpoint: {
+    description:
+      'Remove a previously-registered breakpoint by id. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      breakpointId: {
+        name: 'breakpointId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  remove_interceptor: {
+    description: 'Removes a single interceptor by id.',
+    category: 'Network interception',
+    args: {
+      interceptorId: {
+        name: 'interceptorId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  remove_override: {
+    description:
+      'Removes a single local override by id. (requires flag: --experimentalLocalOverrides=true)',
+    category: 'Network interception',
+    args: {
+      overrideId: {
+        name: 'overrideId',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  replay_recording: {
+    description:
+      'Load a JSON recording from disk and replay it through the existing input/navigation tools.\n\nReplay is best-effort: only `navigate`, `press_key`, `type_text`, and `wait_for` steps run unconditionally. Selector-only steps that lack a selector (e.g. uid-only `click`) are logged and skipped — the LLM that generated the recording is expected to convert uids to selectors before saving. (requires flag: --experimentalRecorder=true)',
+    category: 'Navigation automation',
+    args: {
+      recordingPath: {
+        name: 'recordingPath',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  reset_permissions: {
+    description:
+      'Clears any permission overrides for the current browser context, restoring default prompt behavior.',
+    category: 'Emulation',
+    args: {},
   },
   resize_page: {
     description:
@@ -727,6 +2073,59 @@ export const commands: Commands = {
         required: true,
       },
     },
+  },
+  resume: {
+    description:
+      'Resume execution after a pause. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  run_axe_audit: {
+    description:
+      "Inject axe-core into the active page and run an accessibility audit. Returns axe's structured result (violations / passes / incomplete / inapplicable).\n\nUse `list_axe_rules` to discover rule ids. `includeOnly` and `exclude` accept CSS selectors. (requires flag: --experimentalAxe=true)",
+    category: 'Debugging',
+    args: {
+      rules: {
+        name: 'rules',
+        type: 'array',
+        description:
+          'Rule ids to enable (whitelist). If omitted, all default rules run.',
+        required: false,
+      },
+      includeOnly: {
+        name: 'includeOnly',
+        type: 'array',
+        description:
+          'CSS selectors. If set, axe only audits descendants of these.',
+        required: false,
+      },
+      exclude: {
+        name: 'exclude',
+        type: 'array',
+        description: 'CSS selectors. Subtrees rooted at these are skipped.',
+        required: false,
+      },
+      resultTypes: {
+        name: 'resultTypes',
+        type: 'array',
+        description:
+          'Result kinds to return. Default ["violations", "incomplete"] to keep payload small.',
+        required: false,
+      },
+      runOnly: {
+        name: 'runOnly',
+        type: 'array',
+        description:
+          'WCAG / best-practice tag filter (e.g. ["wcag2a", "wcag2aa"]).',
+        required: false,
+      },
+    },
+  },
+  save_mhtml: {
+    description:
+      'Save the active page as an MHTML archive (CDP `Page.captureSnapshot` with format `mhtml`).',
+    category: 'Page export',
+    args: {},
   },
   screencast_start: {
     description:
@@ -748,6 +2147,32 @@ export const commands: Commands = {
     category: 'Debugging',
     args: {},
   },
+  scroll_into_view: {
+    description: 'Scrolls the element identified by uid into the viewport.',
+    category: 'Input automation',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      block: {
+        name: 'block',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['start', 'center', 'end', 'nearest'],
+      },
+      inline: {
+        name: 'inline',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['start', 'center', 'end', 'nearest'],
+      },
+    },
+  },
   select_page: {
     description: 'Select a page as a context for future tool calls.',
     category: 'Navigation automation',
@@ -764,6 +2189,304 @@ export const commands: Commands = {
         type: 'boolean',
         description: 'Whether to focus the page and bring it to the top.',
         required: false,
+      },
+    },
+  },
+  set_breakpoint: {
+    description:
+      'Set a JS breakpoint by URL + line (CDP `Debugger.setBreakpointByUrl`). (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      url: {
+        name: 'url',
+        type: 'string',
+        description: 'Source URL (or url-regex via the `urlRegex` field).',
+        required: true,
+      },
+      lineNumber: {
+        name: 'lineNumber',
+        type: 'integer',
+        description: '',
+        required: true,
+      },
+      columnNumber: {
+        name: 'columnNumber',
+        type: 'integer',
+        description: '',
+        required: false,
+      },
+      condition: {
+        name: 'condition',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  set_cookie: {
+    description:
+      'Sets a cookie in the active browser context. At least one of `url` or `domain` must be provided.',
+    category: 'Storage',
+    args: {
+      name: {
+        name: 'name',
+        type: 'string',
+        description: 'Cookie name.',
+        required: true,
+      },
+      value: {
+        name: 'value',
+        type: 'string',
+        description: 'Cookie value.',
+        required: true,
+      },
+      url: {
+        name: 'url',
+        type: 'string',
+        description:
+          'URL for which the cookie applies (sets domain/path/secure).',
+        required: false,
+      },
+      domain: {
+        name: 'domain',
+        type: 'string',
+        description: 'Cookie domain.',
+        required: false,
+      },
+      path: {
+        name: 'path',
+        type: 'string',
+        description: 'Cookie path. Default "/".',
+        required: false,
+      },
+      expires: {
+        name: 'expires',
+        type: 'number',
+        description:
+          'Expiration time in seconds since UNIX epoch. Omit for session cookie.',
+        required: false,
+      },
+      httpOnly: {
+        name: 'httpOnly',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+      secure: {
+        name: 'secure',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+      sameSite: {
+        name: 'sameSite',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: ['Strict', 'Lax', 'None'],
+      },
+    },
+  },
+  set_dom_breakpoint: {
+    description:
+      'Pause when a DOM mutation occurs on the element with the given uid. type: subtree-modified | attribute-modified | node-removed. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      uid: {
+        name: 'uid',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      type: {
+        name: 'type',
+        type: 'string',
+        description: '',
+        required: true,
+        enum: ['subtree-modified', 'attribute-modified', 'node-removed'],
+      },
+    },
+  },
+  set_local_storage: {
+    description: "Sets a localStorage entry on the active page's origin.",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      value: {
+        name: 'value',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  set_session_storage: {
+    description: "Sets a sessionStorage entry on the active page's origin.",
+    category: 'Storage',
+    args: {
+      key: {
+        name: 'key',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+      value: {
+        name: 'value',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  set_xhr_breakpoint: {
+    description:
+      'Pause whenever an XHR/fetch URL contains the given substring (CDP `DOMDebugger.setXHRBreakpoint`). (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {
+      urlSubstring: {
+        name: 'urlSubstring',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  skip_waiting: {
+    description:
+      'Tells a waiting service worker version to immediately activate (CDP `ServiceWorker.skipWaiting`). Useful for testing the new SW without forcing a hard reload.',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  start_css_coverage: {
+    description: 'Start collecting CSS coverage on the active page.',
+    category: 'Code coverage',
+    args: {
+      resetOnNavigation: {
+        name: 'resetOnNavigation',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  start_js_coverage: {
+    description:
+      'Start collecting JavaScript code coverage on the active page. Stop with `stop_js_coverage` to retrieve the report.',
+    category: 'Code coverage',
+    args: {
+      detailed: {
+        name: 'detailed',
+        type: 'boolean',
+        description:
+          'When true, collect detailed coverage (every byte). When false, only function-level granularity. Default true.',
+        required: false,
+      },
+      reportAnonymousScripts: {
+        name: 'reportAnonymousScripts',
+        type: 'boolean',
+        description: 'Include anonymous scripts (e.g. eval). Default false.',
+        required: false,
+      },
+      resetOnNavigation: {
+        name: 'resetOnNavigation',
+        type: 'boolean',
+        description: 'Reset coverage on navigation. Default true.',
+        required: false,
+      },
+    },
+  },
+  start_service_worker: {
+    description:
+      'Starts a service worker registration (CDP `ServiceWorker.startWorker`).',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: '',
+        required: true,
+      },
+    },
+  },
+  step_into: {
+    description:
+      'Step into the next function call. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  step_out: {
+    description:
+      'Step out of the current function. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  step_over: {
+    description:
+      'Step over the current statement. (requires flag: --experimentalDebugger=true)',
+    category: 'Debugging',
+    args: {},
+  },
+  stop_css_coverage: {
+    description: 'Stop CSS coverage and return the report.',
+    category: 'Code coverage',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      summaryOnly: {
+        name: 'summaryOnly',
+        type: 'boolean',
+        description: '',
+        required: false,
+      },
+    },
+  },
+  stop_js_coverage: {
+    description:
+      'Stop JS coverage and return the report. If `filePath` is set, the JSON is written to disk; otherwise the report is returned inline.',
+    category: 'Code coverage',
+    args: {
+      filePath: {
+        name: 'filePath',
+        type: 'string',
+        description: '',
+        required: false,
+      },
+      summaryOnly: {
+        name: 'summaryOnly',
+        type: 'boolean',
+        description:
+          'Return only per-URL byte usage totals instead of full ranges. Default false.',
+        required: false,
+      },
+    },
+  },
+  stop_service_worker: {
+    description:
+      "Stops the active service worker for a registration (CDP `ServiceWorker.stopWorker`). Doesn't unregister; the SW will start again on the next event.",
+    category: 'Service workers / PWA',
+    args: {
+      versionId: {
+        name: 'versionId',
+        type: 'string',
+        description:
+          'Service worker version id (from `list_service_worker_registrations`).',
+        required: true,
       },
     },
   },
@@ -843,6 +2566,39 @@ export const commands: Commands = {
           'The absolute path, or a path relative to the current working directory, to save the snapshot to instead of attaching it to the response.',
         required: false,
       },
+      forceRefresh: {
+        name: 'forceRefresh',
+        type: 'boolean',
+        description:
+          'When true, ignore any cached snapshot and rebuild from scratch. Default false; the cached snapshot is reused when no DOM mutation has been observed since it was built.',
+        required: false,
+      },
+    },
+  },
+  trigger_background_sync: {
+    description:
+      'Manually trigger a Background Sync event for a registered tag (CDP `BackgroundService` domain).',
+    category: 'Service workers / PWA',
+    args: {
+      origin: {
+        name: 'origin',
+        type: 'string',
+        description: 'Origin of the service worker.',
+        required: true,
+      },
+      serviceWorkerRegistrationId: {
+        name: 'serviceWorkerRegistrationId',
+        type: 'string',
+        description:
+          "Registration id (from `list_service_workers`'s context output).",
+        required: true,
+      },
+      tag: {
+        name: 'tag',
+        type: 'string',
+        description: 'Sync tag.',
+        required: true,
+      },
     },
   },
   trigger_extension_action: {
@@ -886,6 +2642,32 @@ export const commands: Commands = {
         name: 'id',
         type: 'string',
         description: 'ID of the extension to uninstall.',
+        required: true,
+      },
+    },
+  },
+  unregister_service_worker: {
+    description:
+      'Unregisters a service worker by registration scope URL (e.g. "https://example.com/").',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: 'Service worker registration scope URL.',
+        required: true,
+      },
+    },
+  },
+  update_service_worker: {
+    description:
+      'Forces a service worker registration update (re-fetches the SW script and runs the install/activate cycle if changed).',
+    category: 'Service workers / PWA',
+    args: {
+      scopeURL: {
+        name: 'scopeURL',
+        type: 'string',
+        description: '',
         required: true,
       },
     },

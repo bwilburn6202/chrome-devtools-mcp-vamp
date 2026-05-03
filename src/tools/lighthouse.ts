@@ -23,7 +23,7 @@ import {definePageTool} from './ToolDefinition.js';
 
 export const lighthouseAudit = definePageTool({
   name: 'lighthouse_audit',
-  description: `Get Lighthouse score and reports for accessibility, SEO, best practices, and agentic browsing. This excludes performance. For performance audits, run ${startTrace.name}`,
+  description: `Get Lighthouse score and reports. By default audits accessibility, SEO, best practices, and agentic browsing. Pass \`categories\` to include other audits — pass \`['performance']\` for the performance audit (or use ${startTrace.name} for trace-level analysis).`,
   annotations: {
     category: ToolCategory.DEBUGGING,
     readOnlyHint: false,
@@ -43,11 +43,27 @@ export const lighthouseAudit = definePageTool({
       .string()
       .optional()
       .describe('Directory for reports. If omitted, uses temporary files.'),
+    // Phase 6.9: opt-in performance + arbitrary category selection.
+    categories: zod
+      .array(
+        zod.enum([
+          'accessibility',
+          'seo',
+          'best-practices',
+          'agentic-browsing',
+          'performance',
+          'pwa',
+        ]),
+      )
+      .optional()
+      .describe(
+        "Lighthouse audit categories to run. Default ['accessibility', 'seo', 'best-practices', 'agentic-browsing'].",
+      ),
   },
   blockedByDialog: true,
   handler: async (request, response, context) => {
     const page = request.page;
-    const categories = [
+    const categories = request.params.categories ?? [
       'accessibility',
       'seo',
       'best-practices',
@@ -65,8 +81,8 @@ export const lighthouseAudit = definePageTool({
     const flags: Flags = {
       onlyCategories: categories,
       output: formats,
-      // Default 30 second timeout for page load.
-      maxWaitForLoad: 30_000,
+      // Phase 1.6: configurable via --lighthouseMaxWaitMs (default 30000).
+      maxWaitForLoad: context.getTuning().lighthouseMaxWaitMs,
     };
 
     if (device === 'desktop') {

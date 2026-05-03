@@ -69,8 +69,8 @@ export class UniverseManager {
   }
 
   async init(pages: Page[]) {
+    const guard = await this.#mutex.acquire();
     try {
-      await this.#mutex.acquire();
       const promises = [];
       for (const page of pages) {
         promises.push(
@@ -83,9 +83,26 @@ export class UniverseManager {
       this.#browser.on('targetcreated', this.#onTargetCreated);
       this.#browser.on('targetdestroyed', this.#onTargetDestroyed);
 
-      await Promise.all(promises);
+      // Phase 1.7: cap init time so a stuck universe creation can't hang the
+      // whole MCP startup. 5 s is conservative; failures are logged but
+      // non-fatal, since each universe is also lazily created on demand.
+      const all = Promise.all(promises);
+      const timeout = new Promise<void>((_resolve, reject) =>
+        setTimeout(
+          () =>
+            reject(new Error('UniverseManager.init timed out after 5000ms')),
+          5_000,
+        ).unref?.(),
+      );
+      try {
+        await Promise.race([all, timeout]);
+      } catch (err) {
+        // Log and continue — universes are also created lazily by listeners.
+
+        console.error('UniverseManager.init partial failure:', err);
+      }
     } finally {
-      this.#mutex.release();
+      guard.dispose();
     }
   }
 

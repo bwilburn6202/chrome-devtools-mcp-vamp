@@ -183,9 +183,7 @@ describe('snapshotFormatter', () => {
     };
 
     const formatter = new SnapshotFormatter({
-      snapshotId: '1',
       root: node,
-      idToNode: new Map(),
       hasSelectedElement: true,
       verbose: false,
     });
@@ -217,9 +215,7 @@ describe('snapshotFormatter', () => {
     };
 
     const formatter = new SnapshotFormatter({
-      snapshotId: '1',
       root: node,
-      idToNode: new Map(),
       hasSelectedElement: true,
       verbose: true,
     });
@@ -251,9 +247,7 @@ describe('snapshotFormatter', () => {
     };
 
     const formatter = new SnapshotFormatter({
-      snapshotId: '1',
       root: node,
-      idToNode: new Map(),
       hasSelectedElement: true,
       selectedElementUid: '1_1',
       verbose: false,

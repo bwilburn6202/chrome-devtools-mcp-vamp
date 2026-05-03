@@ -477,7 +477,7 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
 
 <!-- BEGIN AUTO GENERATED TOOLS -->
 
-- **Input automation** (9 tools)
+- **Input automation** (10 tools)
   - [`click`](docs/tool-reference.md#click)
   - [`drag`](docs/tool-reference.md#drag)
   - [`fill`](docs/tool-reference.md#fill)
@@ -485,17 +485,26 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
   - [`handle_dialog`](docs/tool-reference.md#handle_dialog)
   - [`hover`](docs/tool-reference.md#hover)
   - [`press_key`](docs/tool-reference.md#press_key)
+  - [`scroll_into_view`](docs/tool-reference.md#scroll_into_view)
   - [`type_text`](docs/tool-reference.md#type_text)
   - [`upload_file`](docs/tool-reference.md#upload_file)
-- **Navigation automation** (6 tools)
+- **Navigation automation** (7 tools)
+  - [`broadcast_evaluate`](docs/tool-reference.md#broadcast_evaluate)
   - [`close_page`](docs/tool-reference.md#close_page)
   - [`list_pages`](docs/tool-reference.md#list_pages)
   - [`navigate_page`](docs/tool-reference.md#navigate_page)
   - [`new_page`](docs/tool-reference.md#new_page)
   - [`select_page`](docs/tool-reference.md#select_page)
   - [`wait_for`](docs/tool-reference.md#wait_for)
-- **Emulation** (2 tools)
+- **Emulation** (9 tools)
+  - [`clear_idle_state_override`](docs/tool-reference.md#clear_idle_state_override)
   - [`emulate`](docs/tool-reference.md#emulate)
+  - [`emulate_idle_state`](docs/tool-reference.md#emulate_idle_state)
+  - [`emulate_reduced_motion`](docs/tool-reference.md#emulate_reduced_motion)
+  - [`emulate_sensor`](docs/tool-reference.md#emulate_sensor)
+  - [`emulate_vision_deficiency`](docs/tool-reference.md#emulate_vision_deficiency)
+  - [`override_permissions`](docs/tool-reference.md#override_permissions)
+  - [`reset_permissions`](docs/tool-reference.md#reset_permissions)
   - [`resize_page`](docs/tool-reference.md#resize_page)
 - **Performance** (3 tools)
   - [`performance_analyze_insight`](docs/tool-reference.md#performance_analyze_insight)
@@ -504,11 +513,15 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
 - **Network** (2 tools)
   - [`get_network_request`](docs/tool-reference.md#get_network_request)
   - [`list_network_requests`](docs/tool-reference.md#list_network_requests)
-- **Debugging** (6 tools)
+- **Debugging** (10 tools)
   - [`evaluate_script`](docs/tool-reference.md#evaluate_script)
+  - [`get_box_model`](docs/tool-reference.md#get_box_model)
+  - [`get_computed_styles`](docs/tool-reference.md#get_computed_styles)
   - [`get_console_message`](docs/tool-reference.md#get_console_message)
+  - [`get_layout_metrics`](docs/tool-reference.md#get_layout_metrics)
   - [`lighthouse_audit`](docs/tool-reference.md#lighthouse_audit)
   - [`list_console_messages`](docs/tool-reference.md#list_console_messages)
+  - [`query_selector_all`](docs/tool-reference.md#query_selector_all)
   - [`take_screenshot`](docs/tool-reference.md#take_screenshot)
   - [`take_snapshot`](docs/tool-reference.md#take_snapshot)
 - **Extensions** (5 tools)
@@ -519,6 +532,56 @@ If you run into any issues, checkout our [troubleshooting guide](./docs/troubles
   - [`uninstall_extension`](docs/tool-reference.md#uninstall_extension)
 - **Memory** (1 tools)
   - [`take_memory_snapshot`](docs/tool-reference.md#take_memory_snapshot)
+- **Storage** (19 tools)
+  - [`clear_all_storage`](docs/tool-reference.md#clear_all_storage)
+  - [`clear_cookies`](docs/tool-reference.md#clear_cookies)
+  - [`clear_indexeddb_object_store`](docs/tool-reference.md#clear_indexeddb_object_store)
+  - [`clear_local_storage`](docs/tool-reference.md#clear_local_storage)
+  - [`clear_session_storage`](docs/tool-reference.md#clear_session_storage)
+  - [`delete_cache`](docs/tool-reference.md#delete_cache)
+  - [`delete_cache_entry`](docs/tool-reference.md#delete_cache_entry)
+  - [`delete_cookie`](docs/tool-reference.md#delete_cookie)
+  - [`delete_indexeddb_database`](docs/tool-reference.md#delete_indexeddb_database)
+  - [`get_cache_entries`](docs/tool-reference.md#get_cache_entries)
+  - [`get_indexeddb_data`](docs/tool-reference.md#get_indexeddb_data)
+  - [`get_local_storage`](docs/tool-reference.md#get_local_storage)
+  - [`get_session_storage`](docs/tool-reference.md#get_session_storage)
+  - [`list_caches`](docs/tool-reference.md#list_caches)
+  - [`list_cookies`](docs/tool-reference.md#list_cookies)
+  - [`list_indexeddb_databases`](docs/tool-reference.md#list_indexeddb_databases)
+  - [`set_cookie`](docs/tool-reference.md#set_cookie)
+  - [`set_local_storage`](docs/tool-reference.md#set_local_storage)
+  - [`set_session_storage`](docs/tool-reference.md#set_session_storage)
+- **Network interception** (10 tools)
+  - [`block_urls`](docs/tool-reference.md#block_urls)
+  - [`clear_interceptors`](docs/tool-reference.md#clear_interceptors)
+  - [`intercept_network`](docs/tool-reference.md#intercept_network)
+  - [`list_har_recordings`](docs/tool-reference.md#list_har_recordings)
+  - [`list_interceptors`](docs/tool-reference.md#list_interceptors)
+  - [`mock_response`](docs/tool-reference.md#mock_response)
+  - [`modify_request_headers`](docs/tool-reference.md#modify_request_headers)
+  - [`record_har_start`](docs/tool-reference.md#record_har_start)
+  - [`record_har_stop`](docs/tool-reference.md#record_har_stop)
+  - [`remove_interceptor`](docs/tool-reference.md#remove_interceptor)
+- **Service workers / PWA** (9 tools)
+  - [`evaluate_in_worker`](docs/tool-reference.md#evaluate_in_worker)
+  - [`get_manifest`](docs/tool-reference.md#get_manifest)
+  - [`list_service_workers`](docs/tool-reference.md#list_service_workers)
+  - [`skip_waiting`](docs/tool-reference.md#skip_waiting)
+  - [`start_service_worker`](docs/tool-reference.md#start_service_worker)
+  - [`stop_service_worker`](docs/tool-reference.md#stop_service_worker)
+  - [`trigger_background_sync`](docs/tool-reference.md#trigger_background_sync)
+  - [`unregister_service_worker`](docs/tool-reference.md#unregister_service_worker)
+  - [`update_service_worker`](docs/tool-reference.md#update_service_worker)
+- **Code coverage** (4 tools)
+  - [`start_css_coverage`](docs/tool-reference.md#start_css_coverage)
+  - [`start_js_coverage`](docs/tool-reference.md#start_js_coverage)
+  - [`stop_css_coverage`](docs/tool-reference.md#stop_css_coverage)
+  - [`stop_js_coverage`](docs/tool-reference.md#stop_js_coverage)
+- **Page export** (3 tools)
+  - [`export_dom_html`](docs/tool-reference.md#export_dom_html)
+  - [`print_to_pdf`](docs/tool-reference.md#print_to_pdf)
+  - [`save_mhtml`](docs/tool-reference.md#save_mhtml)
 
 <!-- END AUTO GENERATED TOOLS -->
 
@@ -626,6 +689,31 @@ The Chrome DevTools MCP server supports the following configuration option:
   Set to true to include tools related to extensions. Note: This feature is currently only supported with a pipe connection. autoConnect, browserUrl, and wsEndpoint are not supported with this feature until 149 will be released.
   - **Type:** boolean
   - **Default:** `false`
+
+- **`--categoryStorage`/ `--category-storage`**
+  Set to false to disable storage tools (cookies, localStorage, sessionStorage, IndexedDB, CacheStorage). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryInterception`/ `--category-interception`**
+  Set to false to disable network interception tools (intercept*network, mock_response, modify_request_headers, block_urls, record_har*\*). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryServiceWorker`/ `--category-service-worker`**
+  Set to false to disable service worker / PWA tools (list_service_workers, evaluate_in_worker, unregister_service_worker, update_service_worker, skip_waiting, get_manifest, trigger_background_sync). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryCoverage`/ `--category-coverage`**
+  Set to false to disable JS/CSS coverage tools (start_js_coverage, stop_js_coverage, start_css_coverage, stop_css_coverage). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
+
+- **`--categoryExport`/ `--category-export`**
+  Set to false to disable page export tools (print_to_pdf, save_mhtml, export_dom_html). Default true.
+  - **Type:** boolean
+  - **Default:** `true`
 
 - **`--performanceCrux`/ `--performance-crux`**
   Set to false to disable sending URLs from performance traces to CrUX API to get field performance data.
